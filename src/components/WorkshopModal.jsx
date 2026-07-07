@@ -56,6 +56,20 @@ export default function WorkshopModal({ isOpen, onClose, workshop }) {
   const isRegistered = localWorkshop.attendees?.includes(currentUser?.uid);
   const isFull = attendeesCount >= capacity;
 
+  let isPastWorkshop = false;
+  if (localWorkshop.date) {
+    const todayObj = new Date();
+    const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
+    if (localWorkshop.date < todayStr) {
+      isPastWorkshop = true;
+    } else if (localWorkshop.date === todayStr && localWorkshop.time) {
+      const [h, m] = localWorkshop.time.split(':').map(Number);
+      if (h < todayObj.getHours() || (h === todayObj.getHours() && m < todayObj.getMinutes())) {
+        isPastWorkshop = true;
+      }
+    }
+  }
+
   const showToast = (message) => {
     setToastMessage(message);
     setTimeout(() => setToastMessage(""), 3000);
@@ -187,7 +201,7 @@ export default function WorkshopModal({ isOpen, onClose, workshop }) {
                 <div className="text-slate-900 leading-relaxed font-semibold whitespace-pre-wrap text-sm max-h-32 overflow-y-auto pr-2 hide-scrollbar">
                   <div className="flex items-center gap-2 text-slate-900 font-semibold">
                     <BadgeInfo className="w-4 h-4 text-slate-400" />
-                    {localWorkshop.description || "Bu atölye için henüz bir açıklama girilmemiş."}
+                    {localWorkshop.description || "Bu Eğitim için henüz bir açıklama girilmemiş."}
                   </div>
                 </div>
               </div>
@@ -273,6 +287,10 @@ export default function WorkshopModal({ isOpen, onClose, workshop }) {
           <div className="p-6 md:px-10 border-t border-slate-100 bg-white flex items-center justify-between shrink-0">
             {isCreator ? (
               <p className="text-sm font-bold text-slate-500">Bu eğitimi siz oluşturdunuz.</p>
+            ) : isPastWorkshop ? (
+              <p className="text-sm font-bold text-slate-400 flex items-center gap-1.5">
+                <Clock className="w-4 h-4" /> Bu eğitim geçmişte kaldı.
+              </p>
             ) : isRegistered ? (
               <p className="text-sm font-bold text-emerald-600 flex items-center gap-1.5">
                 <Check className="w-4 h-4" /> Bu eğitime kayıtlısınız.
@@ -326,7 +344,7 @@ export default function WorkshopModal({ isOpen, onClose, workshop }) {
               ) : (
                 <button
                   onClick={handleRegisterToggle}
-                  disabled={loading || (!isRegistered && isFull)}
+                  disabled={loading || isPastWorkshop || (!isRegistered && isFull)}
                   className={clsx(
                     "flex-1 sm:flex-none flex justify-center items-center gap-2 px-8 py-3 rounded-xl font-bold transition-all shadow-md disabled:opacity-70 disabled:cursor-not-allowed",
                     isRegistered

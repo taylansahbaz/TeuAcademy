@@ -121,17 +121,20 @@ export default function DatePicker({ value, onChange, buttonClassName, hideIconB
               const todayObj = new Date();
               const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
               const isToday = todayStr === dateStr;
+              const isPastDate = dateStr < todayStr;
 
               return (
                 <button
                   key={day}
                   type="button"
+                  disabled={isPastDate}
                   onClick={() => handleSelectDate(day)}
                   className={clsx(
                     "h-10 w-full flex items-center justify-center rounded-lg text-sm font-semibold transition-all duration-200",
                     isSelected ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30 scale-105" :
                       isToday ? "bg-indigo-50 text-indigo-700 border border-indigo-100" :
-                        "text-slate-700 hover:bg-slate-100"
+                        "text-slate-700 hover:bg-slate-100",
+                    isPastDate && "opacity-30 cursor-not-allowed hover:bg-transparent"
                   )}
                 >
                   {day}

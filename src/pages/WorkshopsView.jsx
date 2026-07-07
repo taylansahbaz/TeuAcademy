@@ -49,7 +49,7 @@ export default function WorkshopsView() {
             activeTab === "active" ? "text-slate-900" : "text-slate-400 hover:text-slate-600"
           )}
         >
-          Aktif Atölyeler
+          Aktif Eğitimler
           {activeTab === "active" && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900"></span>}
         </button>
         <button
@@ -74,7 +74,7 @@ export default function WorkshopsView() {
               <div className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CalendarIcon className="w-5 h-5 text-slate-400" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">Planlanmış Atölye Yok</h3>
+              <h3 className="text-lg font-bold text-slate-900">Planlanmış Eğitim Yok</h3>
               <p className="text-slate-500 mt-1 text-sm font-medium">Henüz aktif bir eğitim bulunmuyor.</p>
             </div>
           ) : (

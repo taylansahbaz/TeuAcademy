@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Bell, BookOpen, User, Calendar as CalendarIcon, Users, Check } from "lucide-react";
-import { collection, query, where, orderBy, onSnapshot, doc, updateDoc } from "firebase/firestore";
+import { Bell, BookOpen, User, Calendar as CalendarIcon, Users, Check, Trash2 } from "lucide-react";
+import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, deleteDoc, arrayUnion } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useAuth } from "../contexts/AuthContext";
 import { formatDistanceToNow, parseISO } from "date-fns";
@@ -27,7 +27,7 @@ export default function NotificationDropdown() {
       const notifs = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      }));
+      })).filter(n => !(n.deletedBy?.includes(currentUser.uid)));
       // Sort descending by date
       notifs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setNotifications(notifs);
@@ -58,10 +58,9 @@ export default function NotificationDropdown() {
 
   const handleMarkAsRead = async (notif) => {
     if (isNotificationRead(notif)) return;
-    
+
     try {
       if (notif.userId === "global") {
-        const { arrayUnion } = await import("firebase/firestore");
         await updateDoc(doc(db, "notifications", notif.id), {
           readBy: arrayUnion(currentUser.uid)
         });
@@ -79,6 +78,22 @@ export default function NotificationDropdown() {
     const unreadNotifs = notifications.filter(n => !isNotificationRead(n));
     for (const notif of unreadNotifs) {
       await handleMarkAsRead(notif);
+    }
+  };
+
+  const handleDeleteNotification = async (e, notif) => {
+    e.stopPropagation(); // don't trigger mark as read
+
+    try {
+      if (notif.userId === "global") {
+        await updateDoc(doc(db, "notifications", notif.id), {
+          deletedBy: arrayUnion(currentUser.uid)
+        });
+      } else {
+        await deleteDoc(doc(db, "notifications", notif.id));
+      }
+    } catch (error) {
+      console.error("Bildirim silinirken hata:", error);
     }
   };
 
@@ -105,7 +120,7 @@ export default function NotificationDropdown() {
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Trigger Button */}
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-slate-400 hover:bg-slate-50 hover:text-slate-600 rounded-full transition-colors focus:outline-none"
       >
@@ -125,7 +140,7 @@ export default function NotificationDropdown() {
           <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <h3 className="font-bold text-slate-900">Bildirimler</h3>
             {unreadCount > 0 && (
-              <button 
+              <button
                 onClick={handleMarkAllAsRead}
                 className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors flex items-center gap-1"
               >
@@ -146,33 +161,45 @@ export default function NotificationDropdown() {
                 {notifications.map((notif) => {
                   const readStatus = isNotificationRead(notif);
                   return (
-                  <div 
-                    key={notif.id} 
-                    onClick={() => handleMarkAsRead(notif)}
-                    className={clsx(
-                      "p-5 flex gap-4 transition-colors cursor-pointer hover:bg-slate-50",
-                      !readStatus ? "bg-indigo-50/30" : "opacity-75"
-                    )}
-                  >
-                    <div className={clsx("w-10 h-10 rounded-full flex items-center justify-center shrink-0", getBgColor(notif.type))}>
-                      {getIcon(notif.type)}
+                    <div
+                      key={notif.id}
+                      onClick={() => handleMarkAsRead(notif)}
+                      className={clsx(
+                        "group p-5 flex gap-4 transition-colors cursor-pointer hover:bg-slate-50 relative",
+                        !readStatus ? "bg-indigo-50/30" : "opacity-75"
+                      )}
+                    >
+                      <div className={clsx("w-10 h-10 rounded-full flex items-center justify-center shrink-0", getBgColor(notif.type))}>
+                        {getIcon(notif.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className={clsx("text-sm font-bold truncate", !readStatus ? "text-slate-900" : "text-slate-700")}>
+                          {notif.title}
+                        </h4>
+                        <p className="text-sm text-slate-500 mt-0.5 line-clamp-2">
+                          {notif.message}
+                        </p>
+                        <span className="text-[11px] font-bold text-slate-400 mt-2 block uppercase tracking-wider">
+                          {formatDistanceToNow(parseISO(notif.createdAt), { addSuffix: true, locale: tr })}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-end justify-between shrink-0 h-full gap-2">
+                        <div className="h-4 flex items-center mb-1">
+                          {!readStatus && (
+                            <div className="w-2 h-2 rounded-full bg-indigo-600"></div>
+                          )}
+                        </div>
+                        <button
+                          onClick={(e) => handleDeleteNotification(e, notif)}
+                          className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors md:opacity-0 md:group-hover:opacity-100"
+                          title="Bildirimi Sil"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className={clsx("text-sm font-bold truncate", !readStatus ? "text-slate-900" : "text-slate-700")}>
-                        {notif.title}
-                      </h4>
-                      <p className="text-sm text-slate-500 mt-0.5 line-clamp-2">
-                        {notif.message}
-                      </p>
-                      <span className="text-[11px] font-bold text-slate-400 mt-2 block uppercase tracking-wider">
-                        {formatDistanceToNow(parseISO(notif.createdAt), { addSuffix: true, locale: tr })}
-                      </span>
-                    </div>
-                    {!readStatus && (
-                      <div className="w-2 h-2 rounded-full bg-indigo-600 mt-1.5 shrink-0"></div>
-                    )}
-                  </div>
-                )})}
+                  )
+                })}
               </div>
             )}
           </div>

@@ -61,7 +61,7 @@ export default function DayDetailModal({ isOpen, onClose, day, workshops = [], o
                 </div>
                 <h3 className="text-lg text-slate-900 font-bold mb-2">Planlanmış Eğitim Yok</h3>
                 <p className="text-sm font-medium text-slate-500 mb-8 max-w-[250px]">
-                  Bu tarih için henüz bir atölye veya oturum planlanmamış.
+                  Bu tarih için henüz bir Eğitim veya oturum planlanmamış.
                 </p>
                 <button
                   onClick={handleCreateNew}

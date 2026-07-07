@@ -30,7 +30,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] font-sans selection:bg-indigo-100 selection:text-indigo-900 px-4 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] font-sans selection:bg-indigo-100 selection:text-indigo-900 px-4 relative overflow-hidden animate-fade-in">
 
       {/* Professional SaaS Background (Grid + Subtle Animated Glow) */}
       <div className="absolute inset-0 z-0 pointer-events-none">
@@ -40,13 +40,13 @@ export default function Login() {
 
       <div className="relative z-10 w-full flex flex-col items-center">
         {/* Logo Area */}
-        <div className="mb-8 text-center">
+        <div className="mb-8 text-center animate-slide-up" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
           <h1 className="text-3xl font-extrabold text-indigo-600 tracking-tight">TeuAcademy</h1>
           <p className="text-slate-500 mt-2 font-medium">Kurumsal Eğitim Platformu</p>
         </div>
 
         {/* Main Login Card */}
-        <div className="w-full max-w-[420px] bg-white/90 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-xl shadow-slate-200/40 p-8">
+        <div className="w-full max-w-[420px] bg-white/90 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-xl shadow-slate-200/40 p-8 animate-scale-in" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
 
           <h2 className="text-xl font-bold text-slate-900 mb-6">Hesabınıza giriş yapın</h2>
 

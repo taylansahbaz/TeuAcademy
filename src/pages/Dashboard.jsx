@@ -43,6 +43,7 @@ export default function Dashboard() {
   const [time, setTime] = useState("");
   const [maxCapacity, setMaxCapacity] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   useEffect(() => {
     if (currentUser && profileLoaded) {
@@ -112,6 +113,22 @@ export default function Dashboard() {
       alert("Lütfen eğitim tarihi ve saatini seçiniz.");
       return;
     }
+
+    const todayObj = new Date();
+    const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
+    
+    if (date < todayStr) {
+      alert("Geçmiş bir tarihe eğitim planlanamaz.");
+      return;
+    }
+    if (date === todayStr) {
+      const [h, m] = time.split(':').map(Number);
+      if (h < todayObj.getHours() || (h === todayObj.getHours() && m < todayObj.getMinutes())) {
+        alert("Geçmiş bir saate eğitim planlanamaz.");
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       await addDoc(collection(db, "workshops"), {
@@ -131,7 +148,7 @@ export default function Dashboard() {
       await sendNotification({
         userId: "global",
         title: "Yeni Eğitim Planlandı",
-        message: `${userProfile.name}, "${title}" konulu yeni bir atölye oluşturdu.`,
+        message: `${userProfile.name}, ${title} konulu yeni bir eğitim oluşturdu.`,
         type: "new_workshop"
       });
 
@@ -161,7 +178,7 @@ export default function Dashboard() {
             )}
           >
             <BookOpenIcon className="w-4 h-4" />
-            Atölyeler
+            Eğitimler
           </button>
           <button
             onClick={() => handleMenuClick("calendar")}
@@ -217,7 +234,7 @@ export default function Dashboard() {
             Yardım
           </button>
           <button
-            onClick={() => logout()}
+            onClick={() => setIsLogoutModalOpen(true)}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all"
           >
             <LogOut className="w-4 h-4" />
@@ -239,7 +256,7 @@ export default function Dashboard() {
               {activeMenu === 'attendance' ? (
                 <>Merhaba, <span className="text-indigo-600">{userProfile?.name?.split(' ')[0] || 'Kullanıcı'}</span></>
               ) :
-                activeMenu === 'workshops' ? 'Atölyeler' :
+                activeMenu === 'workshops' ? 'Eğitimler' :
                   activeMenu === 'calendar' ? 'Takvim' :
                     activeMenu === 'profile' ? 'Profilim' :
                       activeMenu === 'admin' ? 'Yönetim Paneli' : ''}
@@ -296,7 +313,7 @@ export default function Dashboard() {
 
         {/* Page Content */}
         <div className="flex-1 overflow-y-auto bg-[#f8fafc] p-6 lg:p-8">
-          <div className={clsx("mx-auto min-h-full flex flex-col", (activeMenu === "calendar" || activeMenu === "admin") ? "max-w-[1400px]" : "max-w-6xl")}>
+          <div key={activeMenu} className={clsx("mx-auto min-h-full flex flex-col animate-scale-in", (activeMenu === "calendar" || activeMenu === "admin") ? "max-w-[1400px]" : "max-w-6xl")}>
             {activeMenu === "workshops" && <WorkshopsView />}
             {activeMenu === "calendar" && (
               <CalendarView
@@ -311,6 +328,38 @@ export default function Dashboard() {
             {activeMenu === "admin" && <AdminView />}
           </div>
         </div>
+
+        {/* Logout Modal */}
+        {isLogoutModalOpen && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-in flex flex-col relative p-6">
+              <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mb-4 mx-auto">
+                <LogOut className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 text-center mb-2">Çıkış Yap</h3>
+              <p className="text-slate-500 text-center text-sm font-medium mb-6">
+                Hesabınızdan çıkış yapmak istediğinize emin misiniz?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsLogoutModalOpen(false)}
+                  className="flex-1 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl font-bold transition-all text-sm"
+                >
+                  İptal
+                </button>
+                <button
+                  onClick={() => {
+                    setIsLogoutModalOpen(false);
+                    logout();
+                  }}
+                  className="flex-1 px-4 py-2.5 bg-red-600 text-white hover:bg-red-700 rounded-xl font-bold transition-all shadow-md shadow-red-600/20 active:scale-95 text-sm"
+                >
+                  Çıkış Yap
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Global Create Workshop Modal */}
         {isModalOpen && (
@@ -332,7 +381,7 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <h2 className="text-xl font-extrabold text-white tracking-tight drop-shadow-sm leading-none mb-1">Yeni Eğitim Oluştur</h2>
-                    <p className="text-indigo-50 text-xs font-medium">Katılımcılar için yeni bir atölye planlayın.</p>
+                    <p className="text-indigo-50 text-xs font-medium">Katılımcılar için yeni bir Eğitim planlayın.</p>
                   </div>
                 </div>
               </div>
@@ -371,7 +420,7 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1.5">Saat</label>
-                      <TimePicker value={time} onChange={setTime} buttonClassName="w-full flex items-center justify-between px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-sm transition-all text-left font-medium text-sm bg-slate-50/50 hover:bg-white border-slate-200" hideIconBg={true} />
+                      <TimePicker selectedDate={date} value={time} onChange={setTime} buttonClassName="w-full flex items-center justify-between px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-sm transition-all text-left font-medium text-sm bg-slate-50/50 hover:bg-white border-slate-200" hideIconBg={true} />
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1.5">Kontenjan</label>

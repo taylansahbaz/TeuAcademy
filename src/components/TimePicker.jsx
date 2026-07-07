@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Clock } from 'lucide-react';
 import clsx from 'clsx';
 
-export default function TimePicker({ value, onChange, buttonClassName, hideIconBg }) {
+export default function TimePicker({ value, onChange, buttonClassName, hideIconBg, selectedDate }) {
   const [isOpen, setIsOpen] = useState(false);
   const [hour, setHour] = useState(value ? value.split(':')[0] : '09');
   const [minute, setMinute] = useState(value ? value.split(':')[1] : '00');
@@ -60,36 +60,52 @@ export default function TimePicker({ value, onChange, buttonClassName, hideIconB
             
             {/* Hours Column */}
             <div className="flex-1 h-full overflow-y-auto snap-y snap-mandatory hide-scrollbar flex flex-col items-center pt-[72px] pb-[72px]">
-              {hours.map(h => (
-                <div 
-                  key={h} 
-                  className={clsx(
-                    "h-12 shrink-0 flex items-center justify-center snap-center text-xl font-bold cursor-pointer w-full transition-all duration-200",
-                    hour === h ? "text-indigo-600 scale-110" : "text-slate-400 hover:text-slate-600 scale-90"
-                  )}
-                  onClick={() => setHour(h)}
-                >
-                  {h}
-                </div>
-              ))}
+              {hours.map(h => {
+                const todayObj = new Date();
+                const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
+                const isToday = selectedDate === todayStr;
+                const isPastHour = isToday && parseInt(h) < todayObj.getHours();
+
+                return (
+                  <div 
+                    key={h} 
+                    className={clsx(
+                      "h-12 shrink-0 flex items-center justify-center snap-center text-xl font-bold cursor-pointer w-full transition-all duration-200",
+                      hour === h ? "text-indigo-600 scale-110" : "text-slate-400 hover:text-slate-600 scale-90",
+                      isPastHour && "opacity-30 pointer-events-none"
+                    )}
+                    onClick={() => !isPastHour && setHour(h)}
+                  >
+                    {h}
+                  </div>
+                );
+              })}
             </div>
 
             <div className="text-2xl font-bold text-slate-300 pb-1 z-10">:</div>
 
             {/* Minutes Column */}
             <div className="flex-1 h-full overflow-y-auto snap-y snap-mandatory hide-scrollbar flex flex-col items-center pt-[72px] pb-[72px]">
-              {minutes.map(m => (
-                <div 
-                  key={m} 
-                  className={clsx(
-                    "h-12 shrink-0 flex items-center justify-center snap-center text-xl font-bold cursor-pointer w-full transition-all duration-200",
-                    minute === m ? "text-indigo-600 scale-110" : "text-slate-400 hover:text-slate-600 scale-90"
-                  )}
-                  onClick={() => setMinute(m)}
-                >
-                  {m}
-                </div>
-              ))}
+              {minutes.map(m => {
+                const todayObj = new Date();
+                const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
+                const isToday = selectedDate === todayStr;
+                const isPastMinute = isToday && parseInt(hour) === todayObj.getHours() && parseInt(m) <= todayObj.getMinutes();
+
+                return (
+                  <div 
+                    key={m} 
+                    className={clsx(
+                      "h-12 shrink-0 flex items-center justify-center snap-center text-xl font-bold cursor-pointer w-full transition-all duration-200",
+                      minute === m ? "text-indigo-600 scale-110" : "text-slate-400 hover:text-slate-600 scale-90",
+                      isPastMinute && "opacity-30 pointer-events-none"
+                    )}
+                    onClick={() => !isPastMinute && setMinute(m)}
+                  >
+                    {m}
+                  </div>
+                );
+              })}
             </div>
           </div>
           <button 
