@@ -14,7 +14,7 @@ import { sendNotification } from "../utils/notifications";
 import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
-  const { currentUser, userProfile, logout } = useAuth();
+  const { currentUser, userProfile, profileLoaded, logout } = useAuth();
   const [activeMenu, setActiveMenu] = useState("workshops"); // "workshops" | "calendar" | "profile"
   const navigate = useNavigate();
 
@@ -28,10 +28,18 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (currentUser && userProfile === null) {
-      navigate('/complete-profile');
+    if (currentUser && profileLoaded) {
+      if (!userProfile || !userProfile.name) {
+        navigate('/complete-profile');
+      } else {
+        const hasJobTags = userProfile.jobTags && userProfile.jobTags.length > 0;
+        const hasHobbyTags = userProfile.hobbyTags && userProfile.hobbyTags.length > 0;
+        if (!hasJobTags && !hasHobbyTags) {
+          navigate('/complete-profile');
+        }
+      }
     }
-  }, [currentUser, userProfile, navigate]);
+  }, [currentUser, userProfile, profileLoaded, navigate]);
 
   useEffect(() => {
     if (!currentUser) return;

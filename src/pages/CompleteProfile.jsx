@@ -8,25 +8,25 @@ import { compressImageToBase64 } from "../utils/imageUtils";
 import { sendNotification } from "../utils/notifications";
 
 export default function CompleteProfile() {
-  const { currentUser, setUserProfile } = useAuth();
+  const { currentUser, userProfile, setUserProfile } = useAuth();
   const navigate = useNavigate();
 
-  const [name, setName] = useState("");
-  const [role, setRole] = useState("");
+  const [name, setName] = useState(userProfile?.name || "");
+  const [role, setRole] = useState(userProfile?.role || "");
 
   // Custom Tag Inputs
   const [jobTagInput, setJobTagInput] = useState("");
-  const [selectedJobTags, setSelectedJobTags] = useState([]);
+  const [selectedJobTags, setSelectedJobTags] = useState(userProfile?.jobTags || []);
 
   const [hobbyTagInput, setHobbyTagInput] = useState("");
-  const [selectedHobbyTags, setSelectedHobbyTags] = useState([]);
+  const [selectedHobbyTags, setSelectedHobbyTags] = useState(userProfile?.hobbyTags || []);
 
   const [loading, setLoading] = useState(false);
 
   // Photo Upload State
   const fileInputRef = useRef(null);
   const [photoLoading, setPhotoLoading] = useState(false);
-  const [photoURL, setPhotoURL] = useState(currentUser?.photoURL || null);
+  const [photoURL, setPhotoURL] = useState(userProfile?.photoURL || currentUser?.photoURL || null);
 
   const handlePhotoClick = () => {
     if (fileInputRef.current) fileInputRef.current.click();

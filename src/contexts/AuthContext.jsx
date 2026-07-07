@@ -12,6 +12,7 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
 
   async function login(email, password) {
@@ -25,6 +26,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
+      setProfileLoaded(false);
       if (user) {
         try {
           const docRef = doc(db, "users", user.uid);
@@ -41,6 +43,7 @@ export function AuthProvider({ children }) {
       } else {
         setUserProfile(null);
       }
+      setProfileLoaded(true);
       setLoading(false);
     });
 
@@ -50,6 +53,7 @@ export function AuthProvider({ children }) {
   const value = {
     currentUser,
     userProfile,
+    profileLoaded,
     setUserProfile, // To update profile state after completion
     login,
     logout,
