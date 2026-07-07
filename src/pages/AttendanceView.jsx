@@ -312,17 +312,17 @@ export default function AttendanceView() {
             <div>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Haftalık Toplam</p>
               <h3 className="text-xl font-black text-slate-900 tabular-nums tracking-tight leading-none whitespace-nowrap">
-                {weeklyTotal} Saat
+                {Math.floor(weeklyTotal)} Saat {Math.round((weeklyTotal % 1) * 60) > 0 ? `${Math.round((weeklyTotal % 1) * 60)} Dakika` : ''}
               </h3>
             </div>
           </div>
           <div className="mt-4 pt-4 border-t border-slate-100/60 w-full flex flex-col gap-1.5">
             <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-wider">
               <span>İlerleme</span>
-              <span>Hedef: 42 Saat</span>
+              <span>Hedef: 47 Saat 30 Dakika</span>
             </div>
             <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-indigo-600 h-full rounded-full transition-all duration-500" style={{ width: `${Math.min((weeklyTotal / 42) * 100, 100)}%` }}></div>
+              <div className="bg-indigo-600 h-full rounded-full transition-all duration-500" style={{ width: `${Math.min((weeklyTotal / 47) * 100, 100)}%` }}></div>
             </div>
           </div>
         </div>
