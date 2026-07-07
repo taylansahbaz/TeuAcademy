@@ -41,7 +41,7 @@ export default function CalendarView({ onCreateWorkshopClick }) {
   };
 
   return (
-    <div className="animate-fade-in h-full flex flex-col relative pb-20">
+    <div className="animate-fade-in min-h-full min-h-[700px] flex flex-col relative pb-20">
 
       {/* Day Detail Modal */}
       <DayDetailModal
@@ -105,40 +105,35 @@ export default function CalendarView({ onCreateWorkshopClick }) {
                     key={day.toISOString()}
                     onClick={() => setSelectedDay(day)}
                     className={clsx(
-                      "p-2 sm:p-3 border-b border-r border-slate-100/60 transition-all duration-300 hover:bg-slate-50 hover:shadow-[inset_0_4px_20px_rgba(0,0,0,0.02)] flex flex-col cursor-pointer group overflow-y-auto max-h-[16vh] lg:max-h-[14vh] hide-scrollbar relative",
+                      "p-1.5 sm:p-2 border-b border-r border-slate-100/60 transition-all duration-300 hover:bg-slate-50 hover:shadow-[inset_0_4px_20px_rgba(0,0,0,0.02)] flex flex-col cursor-pointer group relative min-h-0 overflow-hidden",
                       isToday ? "bg-slate-50/30" : "bg-white",
                       isPast && !isToday ? "opacity-60 hover:opacity-100 bg-slate-50/40" : "opacity-100"
                     )}
                   >
                     {isToday && <div className="absolute top-0 left-0 right-0 h-0.5 bg-indigo-600"></div>}
                     
-                    <div className="flex justify-between items-start mb-3 shrink-0">
+                    <div className="flex justify-between items-start mb-1.5 shrink-0 px-1">
                       {isToday ? (
-                        <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider mt-1.5 ml-1">Bugün</span>
+                        <span className="text-[9px] font-bold text-indigo-600 tracking-wider mt-1">Bugün</span>
                       ) : <div></div>}
                       <span className={clsx(
-                        "w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold transition-all duration-300",
+                        "w-6 h-6 flex items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300",
                         isToday ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/20" : "text-slate-500 group-hover:bg-slate-200 group-hover:text-slate-900"
                       )}>
                         {format(day, 'd')}
                       </span>
                     </div>
 
-                    <div className="space-y-2 flex-1">
+                    <div className="space-y-1 flex-1 overflow-y-auto hide-scrollbar min-h-0 px-0.5 pb-1">
                       {dayWorkshops.map((w, index) => (
                         <div
                           key={w.id}
                           onClick={(e) => handleWorkshopClick(e, w)}
-                          className="bg-white px-2.5 py-2 rounded-xl border border-slate-200 hover:border-indigo-300 hover:shadow-md hover:shadow-indigo-500/10 hover:-translate-y-0.5 transition-all duration-300 text-left relative overflow-hidden"
+                          className="bg-indigo-50 hover:bg-indigo-100/80 px-2 py-1.5 rounded-md border border-indigo-100/50 hover:border-indigo-300 transition-all duration-200 text-left flex items-center gap-1.5 w-full cursor-pointer group/item"
                           title={w.title}
-                          style={{ animationDelay: `${index * 50}ms` }}
                         >
-                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 group-hover/item:bg-indigo-400 transition-colors"></div>
-                          <div className="flex items-center gap-1.5 mb-1 pl-1">
-                            <Clock className="w-3 h-3 text-slate-400" />
-                            <span className="text-[10px] font-bold text-slate-500">{w.time}</span>
-                          </div>
-                          <div className="text-xs font-bold text-slate-800 line-clamp-1 leading-tight pl-1">{w.title}</div>
+                          <span className="text-[9px] font-extrabold text-indigo-600 shrink-0">{w.time}</span>
+                          <span className="text-[10px] font-bold text-slate-700 truncate">{w.title}</span>
                         </div>
                       ))}
                     </div>

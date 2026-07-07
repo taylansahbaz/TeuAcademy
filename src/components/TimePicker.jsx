@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Clock } from 'lucide-react';
 import clsx from 'clsx';
 
-export default function TimePicker({ value, onChange }) {
+export default function TimePicker({ value, onChange, buttonClassName, hideIconBg }) {
   const [isOpen, setIsOpen] = useState(false);
   const [hour, setHour] = useState(value ? value.split(':')[0] : '09');
   const [minute, setMinute] = useState(value ? value.split(':')[1] : '00');
@@ -33,20 +33,24 @@ export default function TimePicker({ value, onChange }) {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={clsx(
+        className={buttonClassName || clsx(
           "w-full flex items-center justify-between px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-sm transition-all text-left font-medium",
           isOpen ? "bg-white border-indigo-500 ring-4 ring-indigo-500/10" : "bg-slate-50/50 hover:bg-white border-slate-200 hover:border-slate-300",
           value ? "text-slate-900" : "text-slate-400"
         )}
       >
-        <span>{value || "Saat Seçin"}</span>
-        <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
-          <Clock className="w-4 h-4 text-indigo-600" />
-        </div>
+        <span className="truncate">{value || "Saat Seçin"}</span>
+        {!hideIconBg ? (
+          <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0 pointer-events-none">
+            <Clock className="w-4 h-4 text-indigo-600" />
+          </div>
+        ) : (
+          <Clock className="w-3.5 h-3.5 text-indigo-500 opacity-80 shrink-0 ml-1.5 pointer-events-none" />
+        )}
       </button>
 
       {isOpen && (
-        <div className="absolute z-[100] mt-2 w-full bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-xl shadow-slate-200/40 p-4 animate-scale-in origin-top">
+        <div className="absolute z-[100] bottom-full mb-2 w-full bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-xl shadow-slate-200/40 p-4 animate-scale-in origin-bottom">
           <div className="text-center mb-3">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Saat Seçimi</span>
           </div>

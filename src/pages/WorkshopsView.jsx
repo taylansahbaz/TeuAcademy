@@ -35,13 +35,6 @@ export default function WorkshopsView() {
         workshop={selectedWorkshop}
       />
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Atölyeler</h1>
-          <p className="text-slate-500 mt-1 font-medium">Gelecek ve aktif eğitim oturumlarını yönetin.</p>
-        </div>
-      </div>
 
       {/* Tabs */}
       <div className="flex gap-8 border-b border-slate-200">
