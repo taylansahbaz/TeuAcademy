@@ -41,6 +41,7 @@ export default function Dashboard() {
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [maxCapacity, setMaxCapacity] = useState("");
   const [loading, setLoading] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
@@ -109,8 +110,12 @@ export default function Dashboard() {
 
   async function handleCreateWorkshop(e) {
     e.preventDefault();
-    if (!date || !time) {
-      alert("Lütfen eğitim tarihi ve saatini seçiniz.");
+    if (!date || !time || !endTime) {
+      alert("Lütfen eğitim tarihi, başlangıç ve bitiş saatini seçiniz.");
+      return;
+    }
+    if (time >= endTime) {
+      alert("Bitiş saati, başlangıç saatinden sonra olmalıdır.");
       return;
     }
 
@@ -131,11 +136,33 @@ export default function Dashboard() {
 
     setLoading(true);
     try {
+      // Overlap Check
+      const q = query(collection(db, "workshops"), where("date", "==", date));
+      const querySnapshot = await getDocs(q);
+      const existingWorkshops = querySnapshot.docs.map(doc => doc.data()).filter(w => !w.isDeleted);
+      
+      const newStart = time;
+      const newEnd = endTime;
+
+      const hasOverlap = existingWorkshops.some(w => {
+        const existingStart = w.time;
+        const existingEnd = w.endTime || w.time;
+        // Overlap: newStart is before existingEnd AND newEnd is after existingStart
+        return (newStart < existingEnd && newEnd > existingStart);
+      });
+
+      if (hasOverlap) {
+        alert("Seçtiğiniz saat aralığında bu tarihte başka bir eğitim bulunmaktadır. Lütfen farklı bir saat seçiniz.");
+        setLoading(false);
+        return;
+      }
+
       await addDoc(collection(db, "workshops"), {
         title,
         description,
         date,
         time,
+        endTime,
         maxCapacity: parseInt(maxCapacity),
         creatorId: currentUser.uid,
         creatorName: userProfile.name,
@@ -153,7 +180,7 @@ export default function Dashboard() {
       });
 
       setIsModalOpen(false);
-      setTitle(""); setDescription(""); setDate(""); setTime(""); setMaxCapacity("");
+      setTitle(""); setDescription(""); setDate(""); setTime(""); setEndTime(""); setMaxCapacity("");
     } catch (error) {
       console.error("Eğitim oluşturulurken hata:", error);
     } finally {
@@ -413,16 +440,20 @@ export default function Dashboard() {
                     ></textarea>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className="col-span-2 sm:col-span-1">
                       <label className="block text-xs font-bold text-slate-700 mb-1.5">Tarih</label>
                       <DatePicker value={date} onChange={setDate} buttonClassName="w-full flex items-center justify-between px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-sm transition-all text-left font-medium text-sm bg-slate-50/50 hover:bg-white border-slate-200" hideIconBg={true} />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1.5">Saat</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">Başlangıç</label>
                       <TimePicker selectedDate={date} value={time} onChange={setTime} buttonClassName="w-full flex items-center justify-between px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-sm transition-all text-left font-medium text-sm bg-slate-50/50 hover:bg-white border-slate-200" hideIconBg={true} />
                     </div>
                     <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">Bitiş</label>
+                      <TimePicker selectedDate={date} value={endTime} onChange={setEndTime} minTime={time} buttonClassName="w-full flex items-center justify-between px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm transition-all text-left font-medium text-sm hover:bg-white" hideIconBg={true} />
+                    </div>
+                    <div className="col-span-2 sm:col-span-1">
                       <label className="block text-xs font-bold text-slate-700 mb-1.5">Kontenjan</label>
                       <div className="relative">
                         <input

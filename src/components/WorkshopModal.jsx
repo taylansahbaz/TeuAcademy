@@ -4,7 +4,7 @@ import { format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
 import clsx from "clsx";
 import { useAuth } from "../contexts/AuthContext";
-import { doc, updateDoc, arrayUnion, arrayRemove, getDoc } from "firebase/firestore";
+import { doc, updateDoc, arrayUnion, arrayRemove, getDoc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/config";
 import EditWorkshopModal from "./EditWorkshopModal";
 import { sendNotification } from "../utils/notifications";
@@ -19,10 +19,17 @@ export default function WorkshopModal({ isOpen, onClose, workshop }) {
   const [attendeeProfiles, setAttendeeProfiles] = useState([]);
 
   useEffect(() => {
-    if (workshop) {
+    if (workshop?.id && isOpen) {
+      const unsub = onSnapshot(doc(db, "workshops", workshop.id), (docSnap) => {
+        if (docSnap.exists()) {
+          setLocalWorkshop({ id: docSnap.id, ...docSnap.data() });
+        }
+      });
+      return () => unsub();
+    } else if (workshop) {
       setLocalWorkshop(workshop);
     }
-  }, [workshop]);
+  }, [workshop, isOpen]);
 
   useEffect(() => {
     async function fetchAttendees() {
@@ -193,7 +200,7 @@ export default function WorkshopModal({ isOpen, onClose, workshop }) {
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Saat</p>
                 <div className="flex items-center gap-2 text-slate-900 font-semibold">
                   <Clock className="w-4 h-4 text-slate-400" />
-                  <span>{localWorkshop.time}</span>
+                  <span>{localWorkshop.time}{localWorkshop.endTime ? ` - ${localWorkshop.endTime}` : ''}</span>
                 </div>
               </div>
               <div className="sm:max-w-xs flex-1">
@@ -383,6 +390,7 @@ export default function WorkshopModal({ isOpen, onClose, workshop }) {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         workshop={localWorkshop}
+        onSuccess={() => showToast("Eğitim başarıyla güncellendi!")}
       />
     </>
   );

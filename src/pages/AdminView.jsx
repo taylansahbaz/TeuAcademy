@@ -7,8 +7,21 @@ import { db } from '../firebase/config';
 
 export default function AdminView() {
   const [dateFilter, setDateFilter] = useState('daily'); // 'daily' | 'weekly' | 'monthly'
+  const [customDate, setCustomDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [customMonth, setCustomMonth] = useState(() => new Date().toISOString().substring(0, 7));
+  const [customWeek, setCustomWeek] = useState(() => {
+    const d = new Date();
+    const startDate = new Date(d.getFullYear(), 0, 1);
+    const days = Math.floor((d - startDate) / (24 * 60 * 60 * 1000));
+    const weekNumber = Math.ceil((d.getDay() + 1 + days) / 7);
+    return `${d.getFullYear()}-W${String(weekNumber).padStart(2, '0')}`;
+  });
+  
+  const [personnelFilter, setPersonnelFilter] = useState('all');
+  const [usersList, setUsersList] = useState([]);
+
   const [personnelStream, setPersonnelStream] = useState([]);
-  const [metrics, setMetrics] = useState({ present: 0, late: 0 });
+  const [metrics, setMetrics] = useState({ present: 0, late: 0, totalUsers: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,23 +30,34 @@ export default function AdminView() {
         const todayObj = new Date();
         const todayStr = todayObj.toISOString().split('T')[0];
 
+        const usersSnapshot = await getDocs(collection(db, "users"));
+        const usersData = usersSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        setUsersList(usersData);
+
         let q = query(collection(db, "attendance"));
         const snapshot = await getDocs(q);
         let records = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
-        // Filter based on dateFilter
         records = records.filter(r => {
           const entryDate = new Date(r.entryTime);
+          
+          if (personnelFilter !== 'all' && r.userId !== personnelFilter) return false;
+
           if (dateFilter === 'daily') {
-            return r.date === todayStr;
+            return r.date === customDate;
           } else if (dateFilter === 'weekly') {
-            const weekAgo = new Date();
-            weekAgo.setDate(todayObj.getDate() - 7);
-            return entryDate >= weekAgo;
+            if (!customWeek) return true;
+            const [year, week] = customWeek.split('-W');
+            const d = new Date(year, 0, 1 + (week - 1) * 7);
+            const start = new Date(d.setDate(d.getDate() - d.getDay() + 1));
+            start.setHours(0,0,0,0);
+            const end = new Date(start);
+            end.setDate(start.getDate() + 7);
+            return entryDate >= start && entryDate < end;
           } else if (dateFilter === 'monthly') {
-            const monthAgo = new Date();
-            monthAgo.setMonth(todayObj.getMonth() - 1);
-            return entryDate >= monthAgo;
+            if (!customMonth) return true;
+            const [year, month] = customMonth.split('-');
+            return entryDate.getFullYear() === parseInt(year) && entryDate.getMonth() + 1 === parseInt(month);
           }
           return true;
         });
@@ -47,7 +71,10 @@ export default function AdminView() {
           const entryTime = new Date(r.entryTime);
           const isLate = entryTime.getHours() > 9 || (entryTime.getHours() === 9 && entryTime.getMinutes() > 15);
 
-          if (r.date === todayStr) {
+          if (dateFilter === 'daily') {
+            presentCount++;
+            if (isLate) lateCount++;
+          } else {
             presentCount++;
             if (isLate) lateCount++;
           }
@@ -72,10 +99,9 @@ export default function AdminView() {
 
         setPersonnelStream(formattedStream);
 
-        const usersSnapshot = await getDocs(collection(db, "users"));
-        const totalUsers = usersSnapshot.docs.length;
+        const totalUsers = usersData.length;
 
-        if (dateFilter === 'daily') {
+        if (dateFilter === 'daily' && personnelFilter === 'all') {
           setMetrics({ present: presentCount, late: lateCount, totalUsers });
         } else {
           setMetrics({ present: presentCount, late: lateCount, totalUsers });
@@ -88,7 +114,7 @@ export default function AdminView() {
     };
 
     fetchAllAttendance();
-  }, [dateFilter]);
+  }, [dateFilter, customDate, customWeek, customMonth, personnelFilter]);
 
   const handleDownloadExcel = () => {
     if (personnelStream.length === 0) return;
@@ -105,10 +131,12 @@ export default function AdminView() {
     const ws = XLSX.utils.json_to_sheet(wsData);
     XLSX.utils.book_append_sheet(wb, ws, "Personel Takibi");
 
-    let fileName = "personel_takibi";
-    if (dateFilter === 'daily') fileName += "_gunluk";
-    else if (dateFilter === 'weekly') fileName += "_haftalik";
-    else if (dateFilter === 'monthly') fileName += "_aylik";
+    const selectedUser = personnelFilter === 'all' ? 'Tum_Personel' : usersList.find(u => u.id === personnelFilter)?.name?.replace(/\s+/g, '_') || 'Personel';
+    let fileName = `${selectedUser}`;
+    
+    if (dateFilter === 'daily') fileName += `_${customDate}_Gunluk_Liste`;
+    else if (dateFilter === 'weekly') fileName += `_${customWeek}_Haftalik_Liste`;
+    else if (dateFilter === 'monthly') fileName += `_${customMonth}_Aylik_Liste`;
 
     XLSX.writeFile(wb, `${fileName}.xlsx`);
   };
@@ -177,23 +205,60 @@ export default function AdminView() {
         </div>
 
         {/* Right: Filters & Excel */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          
+          <select 
+            value={personnelFilter}
+            onChange={(e) => { setLoading(true); setPersonnelFilter(e.target.value); }}
+            className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          >
+            <option value="all">Tüm Personel</option>
+            {usersList.map(u => (
+              <option key={u.id} value={u.id}>{u.name || u.email}</option>
+            ))}
+          </select>
+
           <div className="flex bg-slate-100/80 p-1 rounded-xl border border-slate-200/50 shadow-inner">
             {['daily', 'weekly', 'monthly'].map(filter => (
               <button
                 key={filter}
                 onClick={() => { setLoading(true); setDateFilter(filter); }}
                 className={clsx(
-                  "px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-300",
+                  "px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-300",
                   dateFilter === filter
                     ? "bg-white text-slate-900 shadow-sm scale-100"
                     : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50 scale-95 hover:scale-100"
                 )}
               >
-                {filter === 'daily' ? 'Bugün' : filter === 'weekly' ? 'Bu Hafta' : 'Bu Ay'}
+                {filter === 'daily' ? 'Günlük' : filter === 'weekly' ? 'Haftalık' : 'Aylık'}
               </button>
             ))}
           </div>
+
+          {dateFilter === 'daily' && (
+            <input 
+              type="date" 
+              value={customDate} 
+              onChange={(e) => { setLoading(true); setCustomDate(e.target.value); }}
+              className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            />
+          )}
+          {dateFilter === 'weekly' && (
+            <input 
+              type="week" 
+              value={customWeek} 
+              onChange={(e) => { setLoading(true); setCustomWeek(e.target.value); }}
+              className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            />
+          )}
+          {dateFilter === 'monthly' && (
+            <input 
+              type="month" 
+              value={customMonth} 
+              onChange={(e) => { setLoading(true); setCustomMonth(e.target.value); }}
+              className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            />
+          )}
 
           <button
             onClick={handleDownloadExcel}

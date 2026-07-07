@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Clock } from 'lucide-react';
 import clsx from 'clsx';
 
-export default function TimePicker({ value, onChange, buttonClassName, hideIconBg, selectedDate }) {
+export default function TimePicker({ value, onChange, buttonClassName, hideIconBg, selectedDate, minTime }) {
   const [isOpen, setIsOpen] = useState(false);
   const [hour, setHour] = useState(value ? value.split(':')[0] : '09');
   const [minute, setMinute] = useState(value ? value.split(':')[1] : '00');
@@ -24,9 +24,30 @@ export default function TimePicker({ value, onChange, buttonClassName, hideIconB
 
   useEffect(() => {
     if (hour && minute) {
-      onChange(`${hour}:${minute}`);
+      const newValue = `${hour}:${minute}`;
+      if (value !== newValue) {
+        onChange(newValue);
+      }
     }
-  }, [hour, minute, onChange]);
+  }, [hour, minute]);
+
+  useEffect(() => {
+    if (value) {
+      const [vH, vM] = value.split(':');
+      if (vH && vM && (vH !== hour || vM !== minute)) {
+        setHour(vH);
+        setMinute(vM);
+      }
+    }
+  }, [value]);
+
+  let minHourNum = -1;
+  let minMinuteNum = -1;
+  if (minTime) {
+    const parts = minTime.split(':');
+    minHourNum = parseInt(parts[0], 10);
+    minMinuteNum = parseInt(parts[1], 10);
+  }
 
   return (
     <div className="relative" ref={popoverRef}>
@@ -64,7 +85,12 @@ export default function TimePicker({ value, onChange, buttonClassName, hideIconB
                 const todayObj = new Date();
                 const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
                 const isToday = selectedDate === todayStr;
-                const isPastHour = isToday && parseInt(h) < todayObj.getHours();
+                const hNum = parseInt(h);
+                let isDisabled = isToday && hNum < todayObj.getHours();
+                
+                if (minTime && !isDisabled) {
+                  isDisabled = hNum < minHourNum;
+                }
 
                 return (
                   <div 
@@ -72,9 +98,9 @@ export default function TimePicker({ value, onChange, buttonClassName, hideIconB
                     className={clsx(
                       "h-12 shrink-0 flex items-center justify-center snap-center text-xl font-bold cursor-pointer w-full transition-all duration-200",
                       hour === h ? "text-indigo-600 scale-110" : "text-slate-400 hover:text-slate-600 scale-90",
-                      isPastHour && "opacity-30 pointer-events-none"
+                      isDisabled && "opacity-30 pointer-events-none"
                     )}
-                    onClick={() => !isPastHour && setHour(h)}
+                    onClick={() => !isDisabled && setHour(h)}
                   >
                     {h}
                   </div>
@@ -90,7 +116,13 @@ export default function TimePicker({ value, onChange, buttonClassName, hideIconB
                 const todayObj = new Date();
                 const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
                 const isToday = selectedDate === todayStr;
-                const isPastMinute = isToday && parseInt(hour) === todayObj.getHours() && parseInt(m) <= todayObj.getMinutes();
+                const hNum = parseInt(hour);
+                const mNum = parseInt(m);
+                let isDisabled = isToday && hNum === todayObj.getHours() && mNum <= todayObj.getMinutes();
+
+                if (minTime && !isDisabled) {
+                  isDisabled = (hNum === minHourNum && mNum <= minMinuteNum);
+                }
 
                 return (
                   <div 
@@ -98,9 +130,9 @@ export default function TimePicker({ value, onChange, buttonClassName, hideIconB
                     className={clsx(
                       "h-12 shrink-0 flex items-center justify-center snap-center text-xl font-bold cursor-pointer w-full transition-all duration-200",
                       minute === m ? "text-indigo-600 scale-110" : "text-slate-400 hover:text-slate-600 scale-90",
-                      isPastMinute && "opacity-30 pointer-events-none"
+                      isDisabled && "opacity-30 pointer-events-none"
                     )}
-                    onClick={() => !isPastMinute && setMinute(m)}
+                    onClick={() => !isDisabled && setMinute(m)}
                   >
                     {m}
                   </div>

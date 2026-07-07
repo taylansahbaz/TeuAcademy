@@ -90,7 +90,7 @@ export default function DayDetailModal({ isOpen, onClose, day, workshops = [], o
                         </h3>
                         <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 bg-slate-50 border border-slate-100 px-2.5 py-1.5 rounded-md shrink-0">
                           <Clock className="w-3.5 h-3.5" />
-                          <span>{w.time}</span>
+                          <span>{w.time}{w.endTime ? ` - ${w.endTime}` : ''}</span>
                         </div>
                       </div>
                       <div className="flex justify-between items-center mt-4 pt-4 border-t border-slate-50">

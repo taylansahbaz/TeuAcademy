@@ -114,7 +114,7 @@ export default function WorkshopsView() {
                     {/* Time */}
                     <div className="flex items-center gap-2 text-xs font-bold text-slate-500 mb-6 border-l-2 border-slate-200 pl-3">
                       <Clock className="w-3.5 h-3.5" />
-                      <span>{workshop.time}</span>
+                      <span>{workshop.time}{workshop.endTime ? ` - ${workshop.endTime}` : ''}</span>
                     </div>
 
                     {/* Progress & Attendees */}

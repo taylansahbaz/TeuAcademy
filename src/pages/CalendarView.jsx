@@ -132,7 +132,7 @@ export default function CalendarView({ onCreateWorkshopClick }) {
                           className="bg-indigo-50 hover:bg-indigo-100/80 px-2 py-1.5 rounded-md border border-indigo-100/50 hover:border-indigo-300 transition-all duration-200 text-left flex items-center gap-1.5 w-full cursor-pointer group/item"
                           title={w.title}
                         >
-                          <span className="text-[9px] font-extrabold text-indigo-600 shrink-0">{w.time}</span>
+                          <span className="text-[9px] font-extrabold text-indigo-600 shrink-0">{w.time}{w.endTime ? `-${w.endTime}` : ''}</span>
                           <span className="text-[10px] font-bold text-slate-700 truncate">{w.title}</span>
                         </div>
                       ))}

@@ -2,14 +2,15 @@ import { useState, useEffect } from "react";
 import { X, BookOpen, User } from "lucide-react";
 import DatePicker from "./DatePicker";
 import TimePicker from "./TimePicker";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase/config";
 
-export default function EditWorkshopModal({ isOpen, onClose, workshop }) {
+export default function EditWorkshopModal({ isOpen, onClose, workshop, onSuccess }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [maxCapacity, setMaxCapacity] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -19,6 +20,7 @@ export default function EditWorkshopModal({ isOpen, onClose, workshop }) {
       setDescription(workshop.description || "");
       setDate(workshop.date || "");
       setTime(workshop.time || "");
+      setEndTime(workshop.endTime || "");
       setMaxCapacity(workshop.capacity || workshop.maxCapacity || "");
     }
   }, [workshop, isOpen]);
@@ -27,17 +29,50 @@ export default function EditWorkshopModal({ isOpen, onClose, workshop }) {
 
   async function handleEditWorkshop(e) {
     e.preventDefault();
+    if (!date || !time || !endTime) {
+      alert("Lütfen eğitim tarihi, başlangıç ve bitiş saatini seçiniz.");
+      return;
+    }
+    if (time >= endTime) {
+      alert("Bitiş saati, başlangıç saatinden sonra olmalıdır.");
+      return;
+    }
+
     setLoading(true);
     try {
+      // Overlap Check
+      const q = query(collection(db, "workshops"), where("date", "==", date));
+      const querySnapshot = await getDocs(q);
+      const existingWorkshops = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(w => !w.isDeleted && w.id !== workshop.id);
+      
+      const newStart = time;
+      const newEnd = endTime;
+
+      const hasOverlap = existingWorkshops.some(w => {
+        const existingStart = w.time;
+        const existingEnd = w.endTime || w.time;
+        // Overlap condition: newStart < existingEnd AND newEnd > existingStart
+        return (newStart < existingEnd && newEnd > existingStart);
+      });
+
+      if (hasOverlap) {
+        alert("Seçtiğiniz saat aralığında bu tarihte başka bir eğitim bulunmaktadır. Lütfen farklı bir saat seçiniz.");
+        setLoading(false);
+        return;
+      }
+
       const workshopRef = doc(db, "workshops", workshop.id);
       await updateDoc(workshopRef, {
         title,
         description,
         date,
         time,
+        endTime,
         maxCapacity: parseInt(maxCapacity),
         capacity: parseInt(maxCapacity) // keep both for backwards compatibility if needed
       });
+      
+      if (onSuccess) onSuccess();
       onClose();
     } catch (error) {
       console.error("Eğitim güncellenirken hata:", error);
@@ -48,8 +83,7 @@ export default function EditWorkshopModal({ isOpen, onClose, workshop }) {
 
   return (
     <div className="fixed inset-0 z-[110] flex items-start justify-center p-4 sm:p-6 py-10 bg-slate-900/60 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-visible animate-scale-in flex flex-col my-auto relative">
-        
+      <div className="rounded-3xl shadow-2xl w-full max-w-xl overflow-visible animate-scale-in flex flex-col my-auto relative">
         {/* Modal Header */}
         <div className="relative overflow-hidden rounded-t-3xl bg-[linear-gradient(110deg,#4f46e5,#818cf8,#c7d2fe)] p-5 shrink-0">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff20_1px,transparent_1px),linear-gradient(to_bottom,#ffffff20_1px,transparent_1px)] bg-[size:24px_24px]"></div>
@@ -71,7 +105,7 @@ export default function EditWorkshopModal({ isOpen, onClose, workshop }) {
         </div>
         
         {/* Modal Body */}
-        <div className="p-5 overflow-visible">
+        <div className="p-5 overflow-visible bg-white rounded-b-3xl">
           <form onSubmit={handleEditWorkshop} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">Eğitim Başlığı</label>
@@ -97,16 +131,20 @@ export default function EditWorkshopModal({ isOpen, onClose, workshop }) {
               ></textarea>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="col-span-2 sm:col-span-1">
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">Tarih</label>
                 <DatePicker value={date} onChange={setDate} buttonClassName="w-full flex items-center justify-between px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-sm transition-all text-left font-medium text-sm bg-slate-50/50 hover:bg-white border-slate-200" hideIconBg={true} />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">Saat</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Başlangıç</label>
                 <TimePicker value={time} onChange={setTime} buttonClassName="w-full flex items-center justify-between px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-sm transition-all text-left font-medium text-sm bg-slate-50/50 hover:bg-white border-slate-200" hideIconBg={true} />
               </div>
               <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Bitiş</label>
+                <TimePicker value={endTime} onChange={setEndTime} minTime={time} buttonClassName="w-full flex items-center justify-between px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-sm transition-all text-left font-medium text-sm bg-slate-50/50 hover:bg-white border-slate-200" hideIconBg={true} />
+              </div>
+              <div className="col-span-2 sm:col-span-1">
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">Kontenjan</label>
                 <div className="relative">
                   <input 
