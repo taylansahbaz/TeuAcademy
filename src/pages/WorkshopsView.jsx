@@ -18,7 +18,11 @@ export default function WorkshopsView() {
       const workshopsData = snapshot.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(w => !w.isDeleted)
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
+        .sort((a, b) => {
+          const dateA = a.date ? new Date(a.date) : new Date(0);
+          const dateB = b.date ? new Date(b.date) : new Date(0);
+          return dateA - dateB;
+        });
       setWorkshops(workshopsData);
     });
 
@@ -92,10 +96,10 @@ export default function WorkshopsView() {
                     <div className="flex justify-between items-start mb-6">
                       <div className="flex flex-col">
                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-                          {format(parseISO(workshop.date), 'MMMM', { locale: tr })}
+                          {workshop.date ? format(parseISO(workshop.date), 'MMMM', { locale: tr }) : "Bilinmiyor"}
                         </span>
                         <span className="text-2xl font-black text-slate-900 leading-none tracking-tight">
-                          {format(parseISO(workshop.date), 'dd')}
+                          {workshop.date ? format(parseISO(workshop.date), 'dd') : "-"}
                         </span>
                       </div>
                     </div>

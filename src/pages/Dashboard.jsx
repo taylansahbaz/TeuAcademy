@@ -86,7 +86,7 @@ export default function Dashboard() {
                 sendNotification({
                   userId: currentUser.uid,
                   title: "Eğitim Başlıyor!",
-                  message: `"${w.title}" eğitiminin başlamasına 1 saatten az kaldı.`,
+                  message: `${w.title} eğitiminin başlamasına 1 saatten az kaldı.`,
                   type: "workshop_reminder"
                 });
                 localStorage.setItem(notifiedKey, "true");
@@ -108,6 +108,10 @@ export default function Dashboard() {
 
   async function handleCreateWorkshop(e) {
     e.preventDefault();
+    if (!date || !time) {
+      alert("Lütfen eğitim tarihi ve saatini seçiniz.");
+      return;
+    }
     setLoading(true);
     try {
       await addDoc(collection(db, "workshops"), {

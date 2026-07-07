@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Calendar as CalendarIcon, Clock, Users, ArrowRight, Loader2, Check, Trash2, Edit2, User } from "lucide-react";
+import { X, Calendar as CalendarIcon, Clock, Users, ArrowRight, Loader2, Check, Trash2, Edit2, User, InfoIcon, Info, BadgeInfo } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
 import clsx from "clsx";
@@ -110,7 +110,7 @@ export default function WorkshopModal({ isOpen, onClose, workshop }) {
             await sendNotification({
               userId: localWorkshop.creatorId,
               title: "Eğitiminize Yeni Katılımcı",
-              message: `${userName} "${localWorkshop.title}" eğitiminize kayıt oldu!`,
+              message: `${userName}, ${localWorkshop.title} eğitiminize kayıt oldu!`,
               type: "new_attendee"
             });
           }
@@ -122,7 +122,7 @@ export default function WorkshopModal({ isOpen, onClose, workshop }) {
                 await sendNotification({
                   userId: attendeeId,
                   title: "Eğitime Yeni Katılımcı",
-                  message: `Kayıtlı olduğunuz "${localWorkshop.title}" eğitimine ${userName} katıldı.`,
+                  message: `Kayıtlı olduğunuz ${localWorkshop.title} eğitimine ${userName} katıldı.`,
                   type: "new_attendee"
                 });
               }
@@ -167,12 +167,12 @@ export default function WorkshopModal({ isOpen, onClose, workshop }) {
             </h2>
 
             {/* Meta Info Grid */}
-            <div className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-4 sm:gap-8 mb-10 pb-10 border-b border-slate-100">
+            <div className="grid grid-cols-3 sm:flex sm:flex-row items-center gap-4 sm:gap-8 mb-10 pb-10 border-b border-slate-100">
               <div>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Tarih</p>
                 <div className="flex items-center gap-2 text-slate-900 font-semibold">
                   <CalendarIcon className="w-4 h-4 text-slate-400" />
-                  <span>{format(parseISO(localWorkshop.date), 'dd MMMM yyyy', { locale: tr })}</span>
+                  <span>{localWorkshop.date ? format(parseISO(localWorkshop.date), 'dd MMMM yyyy', { locale: tr }) : "Belirtilmemiş"}</span>
                 </div>
               </div>
               <div>
@@ -182,15 +182,18 @@ export default function WorkshopModal({ isOpen, onClose, workshop }) {
                   <span>{localWorkshop.time}</span>
                 </div>
               </div>
+              <div className="sm:max-w-xs flex-1">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Eğitim Hakkında</p>
+                <div className="text-slate-900 leading-relaxed font-semibold whitespace-pre-wrap text-sm max-h-32 overflow-y-auto pr-2 hide-scrollbar">
+                  <div className="flex items-center gap-2 text-slate-900 font-semibold">
+                    <BadgeInfo className="w-4 h-4 text-slate-400" />
+                    {localWorkshop.description || "Bu atölye için henüz bir açıklama girilmemiş."}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Description */}
-            <div className="mb-10">
-              <h3 className="text-sm font-bold text-slate-900 mb-4">Eğitim Hakkında</h3>
-              <p className="text-slate-600 leading-relaxed font-medium whitespace-pre-wrap">
-                {localWorkshop.description || "Bu atölye için henüz bir açıklama girilmemiş."}
-              </p>
-            </div>
+
 
             {/* Instructor & Capacity Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
@@ -344,17 +347,19 @@ export default function WorkshopModal({ isOpen, onClose, workshop }) {
           </div>
 
         </div>
-      </div>
+      </div >
 
       {/* Toast Message */}
-      {toastMessage && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] animate-slide-up">
-          <div className="bg-slate-900 text-white px-6 py-3 rounded-xl shadow-xl font-bold flex items-center gap-2 text-sm border border-slate-700">
-            <Check className="w-4 h-4 text-emerald-400" />
-            {toastMessage}
+      {
+        toastMessage && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] animate-slide-up">
+            <div className="bg-slate-900 text-white px-6 py-3 rounded-xl shadow-xl font-bold flex items-center gap-2 text-sm border border-slate-700">
+              <Check className="w-4 h-4 text-emerald-400" />
+              {toastMessage}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       <EditWorkshopModal
         isOpen={isEditModalOpen}
