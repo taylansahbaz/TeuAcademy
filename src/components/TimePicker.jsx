@@ -22,14 +22,7 @@ export default function TimePicker({ value, onChange, buttonClassName, hideIconB
   const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
   const minutes = ['00', '15', '30', '45'];
 
-  useEffect(() => {
-    if (hour && minute) {
-      const newValue = `${hour}:${minute}`;
-      if (value !== newValue) {
-        onChange(newValue);
-      }
-    }
-  }, [hour, minute]);
+
 
   useEffect(() => {
     if (value) {
@@ -100,7 +93,12 @@ export default function TimePicker({ value, onChange, buttonClassName, hideIconB
                       hour === h ? "text-indigo-600 scale-110" : "text-slate-400 hover:text-slate-600 scale-90",
                       isDisabled && "opacity-30 pointer-events-none"
                     )}
-                    onClick={() => !isDisabled && setHour(h)}
+                    onClick={() => {
+                      if (!isDisabled) {
+                        setHour(h);
+                        onChange(`${h}:${minute}`);
+                      }
+                    }}
                   >
                     {h}
                   </div>
@@ -132,7 +130,12 @@ export default function TimePicker({ value, onChange, buttonClassName, hideIconB
                       minute === m ? "text-indigo-600 scale-110" : "text-slate-400 hover:text-slate-600 scale-90",
                       isDisabled && "opacity-30 pointer-events-none"
                     )}
-                    onClick={() => !isDisabled && setMinute(m)}
+                    onClick={() => {
+                      if (!isDisabled) {
+                        setMinute(m);
+                        onChange(`${hour}:${m}`);
+                      }
+                    }}
                   >
                     {m}
                   </div>

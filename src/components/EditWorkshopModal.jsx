@@ -83,7 +83,7 @@ export default function EditWorkshopModal({ isOpen, onClose, workshop, onSuccess
 
   return (
     <div className="fixed inset-0 z-[110] flex items-start justify-center p-4 sm:p-6 py-10 bg-slate-900/60 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="rounded-3xl shadow-2xl w-full max-w-xl overflow-visible animate-scale-in flex flex-col my-auto relative">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-visible animate-scale-in flex flex-col my-auto relative">
         {/* Modal Header */}
         <div className="relative overflow-hidden rounded-t-3xl bg-[linear-gradient(110deg,#4f46e5,#818cf8,#c7d2fe)] p-5 shrink-0">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff20_1px,transparent_1px),linear-gradient(to_bottom,#ffffff20_1px,transparent_1px)] bg-[size:24px_24px]"></div>
@@ -105,7 +105,7 @@ export default function EditWorkshopModal({ isOpen, onClose, workshop, onSuccess
         </div>
         
         {/* Modal Body */}
-        <div className="p-5 overflow-visible bg-white rounded-b-3xl">
+        <div className="p-5 overflow-visible">
           <form onSubmit={handleEditWorkshop} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">Eğitim Başlığı</label>
