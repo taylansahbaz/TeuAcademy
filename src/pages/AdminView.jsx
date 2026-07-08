@@ -16,7 +16,7 @@ export default function AdminView() {
     const weekNumber = Math.ceil((d.getDay() + 1 + days) / 7);
     return `${d.getFullYear()}-W${String(weekNumber).padStart(2, '0')}`;
   });
-  
+
   const [personnelFilter, setPersonnelFilter] = useState('all');
   const [usersList, setUsersList] = useState([]);
 
@@ -40,7 +40,7 @@ export default function AdminView() {
 
         records = records.filter(r => {
           const entryDate = new Date(r.entryTime);
-          
+
           if (personnelFilter !== 'all' && r.userId !== personnelFilter) return false;
 
           if (dateFilter === 'daily') {
@@ -50,7 +50,7 @@ export default function AdminView() {
             const [year, week] = customWeek.split('-W');
             const d = new Date(year, 0, 1 + (week - 1) * 7);
             const start = new Date(d.setDate(d.getDate() - d.getDay() + 1));
-            start.setHours(0,0,0,0);
+            start.setHours(0, 0, 0, 0);
             const end = new Date(start);
             end.setDate(start.getDate() + 7);
             return entryDate >= start && entryDate < end;
@@ -89,7 +89,7 @@ export default function AdminView() {
             id: r.id,
             initials: r.userName?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'U',
             name: r.userName || 'Bilinmeyen Kullanıcı',
-            dept: r.dept || 'Personel',
+            date: entryTime.toLocaleDateString('tr-TR'),
             entry: entryTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
             exit: r.exitTime ? new Date(r.exitTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : 'Devam Ediyor',
             duration: r.exitTime ? `${hours}s ${mins}dk` : '-',
@@ -121,7 +121,7 @@ export default function AdminView() {
 
     const wsData = personnelStream.map(person => ({
       'Personel Adı': person.name,
-      'Departman': person.dept,
+      'Tarih': person.date,
       'Giriş Saati': person.entry,
       'Çıkış Saati': person.exit,
       'Çalışma Süresi': person.duration
@@ -133,7 +133,7 @@ export default function AdminView() {
 
     const selectedUser = personnelFilter === 'all' ? 'Tum_Personel' : usersList.find(u => u.id === personnelFilter)?.name?.replace(/\s+/g, '_') || 'Personel';
     let fileName = `${selectedUser}`;
-    
+
     if (dateFilter === 'daily') fileName += `_${customDate}_Gunluk_Liste`;
     else if (dateFilter === 'weekly') fileName += `_${customWeek}_Haftalik_Liste`;
     else if (dateFilter === 'monthly') fileName += `_${customMonth}_Aylik_Liste`;
@@ -206,8 +206,8 @@ export default function AdminView() {
 
         {/* Right: Filters & Excel */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          
-          <select 
+
+          <select
             value={personnelFilter}
             onChange={(e) => { setLoading(true); setPersonnelFilter(e.target.value); }}
             className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
@@ -236,27 +236,30 @@ export default function AdminView() {
           </div>
 
           {dateFilter === 'daily' && (
-            <input 
-              type="date" 
-              value={customDate} 
+            <input
+              type="date"
+              value={customDate}
               onChange={(e) => { setLoading(true); setCustomDate(e.target.value); }}
-              className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              onClick={(e) => e.target.showPicker && e.target.showPicker()}
+              className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
             />
           )}
           {dateFilter === 'weekly' && (
-            <input 
-              type="week" 
-              value={customWeek} 
+            <input
+              type="week"
+              value={customWeek}
               onChange={(e) => { setLoading(true); setCustomWeek(e.target.value); }}
-              className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              onClick={(e) => e.target.showPicker && e.target.showPicker()}
+              className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
             />
           )}
           {dateFilter === 'monthly' && (
-            <input 
-              type="month" 
-              value={customMonth} 
+            <input
+              type="month"
+              value={customMonth}
               onChange={(e) => { setLoading(true); setCustomMonth(e.target.value); }}
-              className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              onClick={(e) => e.target.showPicker && e.target.showPicker()}
+              className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
             />
           )}
 
