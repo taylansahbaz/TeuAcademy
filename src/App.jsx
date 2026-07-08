@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { AlertProvider } from "./contexts/AlertContext";
 import { useEffect, useState } from "react";
 import { WifiOff, AlertTriangle } from "lucide-react";
 import Login from "./pages/Login";
@@ -80,27 +81,29 @@ function App() {
   return (
     <Router>
       <NetworkGuard>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/complete-profile"
-              element={
-                <PrivateRoute>
-                  <CompleteProfile />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/*"
-              element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              }
-            />
-          </Routes>
-        </AuthProvider>
+        <AlertProvider>
+          <AuthProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/complete-profile"
+                element={
+                  <PrivateRoute>
+                    <CompleteProfile />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/*"
+                element={
+                  <PrivateRoute>
+                    <Dashboard />
+                  </PrivateRoute>
+                }
+              />
+            </Routes>
+          </AuthProvider>
+        </AlertProvider>
       </NetworkGuard>
     </Router>
   );

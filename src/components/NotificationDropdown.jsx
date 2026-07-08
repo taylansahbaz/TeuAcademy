@@ -3,23 +3,32 @@ import { Bell, BookOpen, User, Calendar as CalendarIcon, Users, Check, Trash2 } 
 import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, deleteDoc, arrayUnion } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { useAuth } from "../contexts/AuthContext";
+import { useAlert } from '../contexts/AlertContext';
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { tr } from "date-fns/locale";
 import clsx from "clsx";
+import { useNavigate } from "react-router-dom";
+import WorkshopsView from "../pages/WorkshopsView";
 
 export default function NotificationDropdown() {
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
+  const { showAlert } = useAlert();
+  const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'manager';
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const dropdownRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!currentUser) return;
 
+    const targetIds = [currentUser.uid, "global"];
+    if (isAdmin) targetIds.push("admin_global");
+
     // Fetch user-specific and global notifications
     const q = query(
       collection(db, "notifications"),
-      where("userId", "in", [currentUser.uid, "global"]),
+      where("userId", "in", targetIds),
       // We do client side sorting because firebase requires composite index for 'in' + 'orderBy'
     );
 
@@ -72,6 +81,26 @@ export default function NotificationDropdown() {
     } catch (error) {
       console.error("Bildirim güncellenirken hata:", error);
     }
+  };
+
+  const handleNotificationClick = async (notif) => {
+    await handleMarkAsRead(notif);
+
+    if (!notif.referenceId) {
+      showAlert("Bilgi", "Bu eski bir bildirim olduğu için ID'si bulunmuyor. Sistemdeki yeni bildirimler detay kartı (Modal) ile çalışmaktadır.", "info");
+      return;
+    }
+
+    if (notif.type === "new_staff") {
+      navigate(`/egitmenler?staffId=${notif.referenceId}`);
+    } else if (notif.type === "new_leave_request") {
+      navigate(`/admin?leaveId=${notif.referenceId}`);
+    } else if (notif.type === "leave_approved" || notif.type === "leave_rejected") {
+      navigate(`/izintakip?leaveId=${notif.referenceId}`);
+    } else {
+      navigate(`/?workshopId=${notif.referenceId}`);
+    }
+    setIsOpen(false);
   };
 
   const handleMarkAllAsRead = async () => {
@@ -163,7 +192,7 @@ export default function NotificationDropdown() {
                   return (
                     <div
                       key={notif.id}
-                      onClick={() => handleMarkAsRead(notif)}
+                      onClick={() => handleNotificationClick(notif)}
                       className={clsx(
                         "group p-5 flex gap-4 transition-colors cursor-pointer hover:bg-slate-50 relative",
                         !readStatus ? "bg-indigo-50/30" : "opacity-75"

@@ -6,9 +6,11 @@ import { db } from "../firebase/config";
 import { UserCircle, Briefcase, Palette, Camera, Plus, X, Loader2 } from "lucide-react";
 import { compressImageToBase64 } from "../utils/imageUtils";
 import { sendNotification } from "../utils/notifications";
+import { useAlert } from "../contexts/AlertContext";
 
 export default function CompleteProfile() {
   const { currentUser, userProfile, setUserProfile } = useAuth();
+  const { showAlert } = useAlert();
   const navigate = useNavigate();
 
   const [name, setName] = useState(userProfile?.name || "");
@@ -76,7 +78,7 @@ export default function CompleteProfile() {
   async function handleSubmit(e) {
     e.preventDefault();
     if (!name || !role) {
-      alert("Lütfen temel bilgilerinizi doldurun.");
+      showAlert("Uyarı", "Lütfen temel bilgilerinizi doldurun.", "error");
       return;
     }
 
@@ -88,7 +90,6 @@ export default function CompleteProfile() {
         role,
         photoURL: photoURL,
         jobTags: selectedJobTags,
-        hobbyTag: selectedHobbyTags.join(", "), // Storing as string or array based on previous logic, but let's keep it as an array if possible or string. Wait, StaffDirectory reads hobbyTag as string. Let's join or fix it later. Let's just save it as array for better future-proofing or a joined string. Actually, earlier it was a single string. Let's change to array `hobbyTags` but the DB might expect `hobbyTag`. I'll save `hobbyTags: selectedHobbyTags` and `hobbyTag: selectedHobbyTags.join(", ")` for compatibility.
         hobbyTags: selectedHobbyTags,
       };
 
@@ -100,13 +101,14 @@ export default function CompleteProfile() {
         userId: "global",
         title: "Ekibe Yeni Biri Katıldı",
         message: `${name}, ${role} olarak ekibe katıldı. Kendisine hoş geldin deyin!`,
-        type: "new_staff"
+        type: "new_staff",
+        referenceId: currentUser.uid
       });
 
       navigate("/");
     } catch (error) {
       console.error("Profil güncellenirken hata oluştu:", error);
-      alert("Profil güncellenirken bir hata oluştu.");
+      showAlert("Hata", "Profil güncellenirken bir hata oluştu.", "error");
     } finally {
       setLoading(false);
     }

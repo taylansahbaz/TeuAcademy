@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { KeyRound, Mail, AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
+import { useAlert } from '../contexts/AlertContext';
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -12,6 +13,7 @@ export default function Login() {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { showAlert } = useAlert();
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -107,9 +109,9 @@ export default function Login() {
                   </>
                 ) : "Giriş Yap"}
               </button>
-              <button
-                type="button"
-                onClick={() => alert("Şifre sıfırlama henüz aktif değil.")}
+              <button 
+                type="button" 
+                onClick={() => showAlert("Bilgi", "Şifre sıfırlama henüz aktif değil.", "info")}
                 className="px-4 py-2.5 bg-white border border-slate-700 text-slate-700 hover:bg-slate-50 font-semibold rounded-xl transition-colors shadow-sm text-[13px] whitespace-nowrap"
               >
                 Şifremi Unuttum

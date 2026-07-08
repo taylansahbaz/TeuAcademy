@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Play, Square, Clock, Calendar as CalendarIcon, LogOut, ArrowRight, BarChart as BarChartIcon, Filter, Watch } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import clsx from 'clsx';
-import { collection, addDoc, updateDoc, doc, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, query, where, onSnapshot, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import DatePicker from '../components/DatePicker';
 
@@ -23,6 +23,7 @@ export default function AttendanceView() {
 
   const [weeklyData, setWeeklyData] = useState([]);
   const [weeklyTotal, setWeeklyTotal] = useState(0);
+
   const [lastExit, setLastExit] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -98,6 +99,11 @@ export default function AttendanceView() {
       for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
+
+        const dayOfWeek = d.getDay();
+        // Cmt(6) ve Paz(0) günlerini grafikten çıkar
+        if (dayOfWeek === 0 || dayOfWeek === 6) continue;
+
         const dateStr = d.toISOString().split('T')[0];
 
         const dayRecords = records.filter(r => r.date === dateStr);
@@ -105,7 +111,7 @@ export default function AttendanceView() {
 
         totalWeekMins += dayMins;
         chartData.push({
-          day: days[d.getDay() === 0 ? 6 : d.getDay() - 1],
+          day: days[dayOfWeek === 0 ? 6 : dayOfWeek - 1],
           hours: Number((dayMins / 60).toFixed(1)),
           fullDate: dateStr
         });
@@ -225,8 +231,9 @@ export default function AttendanceView() {
 
   return (
     <div className="flex flex-col h-full space-y-4 animate-fade-in font-sans">
+
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 -mt-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-3 pt-2">
 
         {/* Clock In/Out Action Card */}
         <div className="bg-indigo-600 p-4 md:p-5 rounded-3xl border border-indigo-500 shadow-lg shadow-indigo-600/20 flex flex-col justify-between relative overflow-hidden group">
@@ -350,10 +357,10 @@ export default function AttendanceView() {
       </div>
 
       {/* Main Content Area */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-8 items-start">
 
         {/* Chart */}
-        <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col h-full">
+        <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col h-full lg:col-span-4">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               <BarChartIcon className="w-5 h-5 text-indigo-600" />
@@ -383,7 +390,7 @@ export default function AttendanceView() {
         </div>
 
         {/* History */}
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col h-full relative z-10">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col h-full relative z-10 lg:col-span-8">
           <div className="flex items-center justify-between p-5 md:p-6 border-b border-slate-100 gap-3">
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2 whitespace-nowrap shrink-0">
               <Clock className="w-5 h-5 text-indigo-600" />
@@ -419,13 +426,14 @@ export default function AttendanceView() {
               </button>
             </div>
           </div>
-
           <div className={clsx("overflow-x-auto transition-opacity duration-250", isAnimatingHistory ? "opacity-0" : "opacity-100")}>
             <table className="w-full text-left border-collapse whitespace-nowrap">
               <thead>
                 <tr className="bg-slate-50/50">
                   <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">TARİH</th>
                   <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">GİRİŞ SAATİ</th>
+                  <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100 text-right">İZİN BAŞ.</th>
+                  <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100 text-right">İZİN BİT.</th>
                   <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">ÇIKIŞ SAATİ</th>
                   <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">SÜRE</th>
                   <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">DURUM</th>
@@ -444,11 +452,24 @@ export default function AttendanceView() {
                 ) : (
                   filteredHistory.map((item, i) => {
                     const entryTime = new Date(item.entryTime);
+                    const isWeekend = entryTime.getDay() === 0 || entryTime.getDay() === 6;
                     const exitTime = item.exitTime ? new Date(item.exitTime) : null;
                     const isLate = entryTime.getHours() > 9 || (entryTime.getHours() === 9 && entryTime.getMinutes() > 15);
 
-                    const hours = Math.floor((item.duration || 0) / 60);
-                    const mins = (item.duration || 0) % 60;
+                    let durationMins = item.duration || 0;
+                    let leaveMins = 0;
+                    if (item.leaveStartTime && item.leaveEndTime) {
+                      const [lStartH, lStartM] = item.leaveStartTime.split(':').map(Number);
+                      const [lEndH, lEndM] = item.leaveEndTime.split(':').map(Number);
+                      leaveMins = (lEndH * 60 + lEndM) - (lStartH * 60 + lStartM);
+                      if (leaveMins > 0) {
+                        durationMins -= leaveMins;
+                        if (durationMins < 0) durationMins = 0;
+                      }
+                    }
+
+                    const hours = Math.floor(durationMins / 60);
+                    const mins = durationMins % 60;
                     const durationStr = exitTime ? `${hours}s ${mins}dk` : '-';
 
                     return (
@@ -460,6 +481,12 @@ export default function AttendanceView() {
                           <span className={clsx(isLate && "text-emerald-500")}>
                             {entryTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                           </span>
+                        </td>
+                        <td className="py-3 px-4 text-[12px] font-bold text-amber-600 text-right">
+                          {item.leaveStartTime || '-'}
+                        </td>
+                        <td className="py-3 px-4 text-[12px] font-bold text-amber-600 text-right">
+                          {item.leaveEndTime || '-'}
                         </td>
                         <td className="py-3 px-4 text-[12px] font-bold text-slate-700">
                           <span className={clsx(isLate && "text-sky-900")}>
@@ -474,6 +501,11 @@ export default function AttendanceView() {
                             <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-black rounded-lg uppercase tracking-wider shadow-sm animate-pulse flex items-center gap-1.5 w-fit">
                               <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
                               AKTİF
+                            </span>
+                          ) : isWeekend ? (
+                            <span className="px-2.5 py-1 bg-amber-50 text-amber-700 text-[10px] font-bold rounded-lg uppercase tracking-wider shadow-sm flex items-center gap-1.5 w-fit">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                              H. SONU
                             </span>
                           ) : isLate ? (
                             <span className="px-2.5 py-1 bg-red-50 text-red-700 text-[10px] font-bold rounded-lg uppercase tracking-wider shadow-sm flex items-center gap-1.5 w-fit">

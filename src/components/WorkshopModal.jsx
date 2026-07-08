@@ -132,7 +132,8 @@ export default function WorkshopModal({ isOpen, onClose, workshop }) {
               userId: localWorkshop.creatorId,
               title: "Eğitiminize Yeni Katılımcı",
               message: `${userName}, ${localWorkshop.title} eğitiminize kayıt oldu!`,
-              type: "new_attendee"
+              type: "new_attendee",
+              referenceId: localWorkshop.id
             });
           }
 
@@ -144,7 +145,8 @@ export default function WorkshopModal({ isOpen, onClose, workshop }) {
                   userId: attendeeId,
                   title: "Eğitime Yeni Katılımcı",
                   message: `Kayıtlı olduğunuz ${localWorkshop.title} eğitimine ${userName} katıldı.`,
-                  type: "new_attendee"
+                  type: "new_attendee",
+                  referenceId: localWorkshop.id
                 });
               }
             }
@@ -162,12 +164,12 @@ export default function WorkshopModal({ isOpen, onClose, workshop }) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] transition-opacity animate-fade-in flex items-center justify-center p-4 sm:p-6"
+        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] transition-opacity animate-fade-in flex items-center justify-center p-4 sm:p-6 transform-gpu will-change-opacity"
         onClick={onClose}
       >
         {/* Modal Content */}
         <div
-          className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-scale-in relative"
+          className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-scale-in relative transform-gpu will-change-transform will-change-opacity"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close Button */}

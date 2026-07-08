@@ -4,8 +4,10 @@ import DatePicker from "./DatePicker";
 import TimePicker from "./TimePicker";
 import { doc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase/config";
+import { useAlert } from "../contexts/AlertContext";
 
 export default function EditWorkshopModal({ isOpen, onClose, workshop, onSuccess }) {
+  const { showAlert } = useAlert();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
@@ -30,11 +32,11 @@ export default function EditWorkshopModal({ isOpen, onClose, workshop, onSuccess
   async function handleEditWorkshop(e) {
     e.preventDefault();
     if (!date || !time || !endTime) {
-      alert("Lütfen eğitim tarihi, başlangıç ve bitiş saatini seçiniz.");
+      showAlert("Uyarı", "Lütfen eğitim tarihi, başlangıç ve bitiş saatini seçiniz.", "error");
       return;
     }
     if (time >= endTime) {
-      alert("Bitiş saati, başlangıç saatinden sonra olmalıdır.");
+      showAlert("Uyarı", "Bitiş saati, başlangıç saatinden sonra olmalıdır.", "error");
       return;
     }
 
@@ -56,7 +58,7 @@ export default function EditWorkshopModal({ isOpen, onClose, workshop, onSuccess
       });
 
       if (hasOverlap) {
-        alert("Seçtiğiniz saat aralığında bu tarihte başka bir eğitim bulunmaktadır. Lütfen farklı bir saat seçiniz.");
+        showAlert("Uyarı", "Seçtiğiniz saat aralığında bu tarihte başka bir eğitim bulunmaktadır. Lütfen farklı bir saat seçiniz.", "error");
         setLoading(false);
         return;
       }

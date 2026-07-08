@@ -83,7 +83,7 @@ export default function DatePicker({ value, onChange, buttonClassName, hideIconB
       </button>
 
       {isOpen && (
-        <div className="absolute z-[100] bottom-full mb-2 w-[320px] bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-xl shadow-slate-200/40 p-5 animate-scale-in origin-bottom">
+        <div className="absolute z-[100] top-full mt-2 w-[320px] bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-xl shadow-slate-200/40 p-5 animate-scale-in origin-top left-0">
 
           {/* Calendar Header */}
           <div className="flex items-center justify-between mb-4">

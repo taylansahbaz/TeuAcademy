@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { Search, Loader2 } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import StaffDetailModal from "../components/StaffDetailModal";
 
 export default function StaffDirectory() {
@@ -9,6 +10,24 @@ export default function StaffDirectory() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPerson, setSelectedPerson] = useState(null);
+  
+  const [searchParams, setSearchParams] = useSearchParams();
+  const staffIdParam = searchParams.get("staffId");
+
+  useEffect(() => {
+    if (staffIdParam && staff.length > 0) {
+      const person = staff.find(x => x.id === staffIdParam);
+      if (person) setSelectedPerson(person);
+    }
+  }, [staffIdParam, staff]);
+
+  const handleCloseModal = () => {
+    setSelectedPerson(null);
+    if (staffIdParam) {
+      searchParams.delete("staffId");
+      setSearchParams(searchParams);
+    }
+  };
 
   useEffect(() => {
     async function fetchStaff() {
@@ -39,7 +58,7 @@ export default function StaffDirectory() {
     <div className="animate-fade-in space-y-8 relative">
       <StaffDetailModal 
         isOpen={!!selectedPerson} 
-        onClose={() => setSelectedPerson(null)} 
+        onClose={handleCloseModal} 
         person={selectedPerson} 
       />
 
@@ -79,7 +98,10 @@ export default function StaffDirectory() {
           {filteredStaff.map(person => (
             <div 
               key={person.id} 
-              onClick={() => setSelectedPerson(person)}
+              onClick={() => {
+                setSelectedPerson(person);
+                setSearchParams({ staffId: person.id });
+              }}
               className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col hover:border-indigo-300 hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
             >
               <div className="flex items-center gap-4 mb-5">

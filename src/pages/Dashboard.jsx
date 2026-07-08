@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { LogOut, BookOpen, Calendar as CalendarIcon, User, HelpCircle, Search, Plus, X, Clock, Shield, BookOpenIcon } from "lucide-react";
+import { LogOut, BookOpen, Calendar as CalendarIcon, User, HelpCircle, Search, Plus, X, Clock, Shield, BookOpenIcon, ClipboardList } from "lucide-react";
 import clsx from "clsx";
 import WorkshopsView from "./WorkshopsView";
 import CalendarView from "./CalendarView";
 import ProfileView from "./ProfileView";
 import AttendanceView from "./AttendanceView";
 import AdminView from "./AdminView";
+import StaffDirectory from "./StaffDirectory";
+import LeaveTrackingView from "./LeaveTrackingView";
 import DatePicker from "../components/DatePicker";
 import TimePicker from "../components/TimePicker";
 import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
@@ -14,24 +16,30 @@ import { db } from "../firebase/config";
 import NotificationDropdown from "../components/NotificationDropdown";
 import { sendNotification } from "../utils/notifications";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAlert } from '../contexts/AlertContext';
 
 export default function Dashboard() {
   const { currentUser, userProfile, profileLoaded, logout } = useAuth();
+  const { showAlert, showConfirm } = useAlert();
   const navigate = useNavigate();
   const location = useLocation();
   const path = location.pathname;
 
   let activeMenu = "workshops";
   if (path === "/takvim") activeMenu = "calendar";
+  else if (path === "/egitmenler") activeMenu = "staff";
   else if (path === "/profil") activeMenu = "profile";
   else if (path === "/mesaitakip") activeMenu = "attendance";
+  else if (path === "/izintakip") activeMenu = "leaveTracking";
   else if (path === "/admin") activeMenu = "admin";
 
   const handleMenuClick = (menu) => {
     if (menu === "workshops") navigate("/");
+    else if (menu === "staff") navigate("/egitmenler");
     else if (menu === "calendar") navigate("/takvim");
     else if (menu === "profile") navigate("/profil");
     else if (menu === "attendance") navigate("/mesaitakip");
+    else if (menu === "leaveTracking") navigate("/izintakip");
     else if (menu === "admin") navigate("/admin");
   };
 
@@ -89,7 +97,8 @@ export default function Dashboard() {
                   userId: currentUser.uid,
                   title: "Eğitim Başlıyor!",
                   message: `${w.title} eğitiminin başlamasına 1 saatten az kaldı.`,
-                  type: "workshop_reminder"
+                  type: "workshop_reminder",
+                  referenceId: w.id
                 });
                 localStorage.setItem(notifiedKey, "true");
               }
@@ -111,11 +120,11 @@ export default function Dashboard() {
   async function handleCreateWorkshop(e) {
     e.preventDefault();
     if (!date || !time || !endTime) {
-      alert("Lütfen eğitim tarihi, başlangıç ve bitiş saatini seçiniz.");
+      showAlert("Uyarı", "Lütfen eğitim tarihi, başlangıç ve bitiş saatini seçiniz.", "error");
       return;
     }
     if (time >= endTime) {
-      alert("Bitiş saati, başlangıç saatinden sonra olmalıdır.");
+      showAlert("Uyarı", "Bitiş saati, başlangıç saatinden sonra olmalıdır.", "error");
       return;
     }
 
@@ -123,13 +132,13 @@ export default function Dashboard() {
     const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
     
     if (date < todayStr) {
-      alert("Geçmiş bir tarihe eğitim planlanamaz.");
+      showAlert("Uyarı", "Geçmiş bir tarihe eğitim planlanamaz.", "error");
       return;
     }
     if (date === todayStr) {
       const [h, m] = time.split(':').map(Number);
       if (h < todayObj.getHours() || (h === todayObj.getHours() && m < todayObj.getMinutes())) {
-        alert("Geçmiş bir saate eğitim planlanamaz.");
+        showAlert("Uyarı", "Geçmiş bir saate eğitim planlanamaz.", "error");
         return;
       }
     }
@@ -141,23 +150,17 @@ export default function Dashboard() {
       const querySnapshot = await getDocs(q);
       const existingWorkshops = querySnapshot.docs.map(doc => doc.data()).filter(w => !w.isDeleted);
       
-      const newStart = time;
-      const newEnd = endTime;
-
       const hasOverlap = existingWorkshops.some(w => {
-        const existingStart = w.time;
-        const existingEnd = w.endTime || w.time;
-        // Overlap: newStart is before existingEnd AND newEnd is after existingStart
-        return (newStart < existingEnd && newEnd > existingStart);
+        return (time < w.endTime && endTime > w.time);
       });
 
       if (hasOverlap) {
-        alert("Seçtiğiniz saat aralığında bu tarihte başka bir eğitim bulunmaktadır. Lütfen farklı bir saat seçiniz.");
+        showAlert("Uyarı", "Seçtiğiniz saat aralığında bu tarihte başka bir eğitim bulunmaktadır. Lütfen farklı bir saat seçiniz.", "error");
         setLoading(false);
         return;
       }
 
-      await addDoc(collection(db, "workshops"), {
+      const docRef = await addDoc(collection(db, "workshops"), {
         title,
         description,
         date,
@@ -176,7 +179,8 @@ export default function Dashboard() {
         userId: "global",
         title: "Yeni Eğitim Planlandı",
         message: `${userProfile.name}, ${title} konulu yeni bir eğitim oluşturdu.`,
-        type: "new_workshop"
+        type: "new_workshop",
+        referenceId: docRef.id
       });
 
       setIsModalOpen(false);
@@ -206,6 +210,16 @@ export default function Dashboard() {
           >
             <BookOpenIcon className="w-4 h-4" />
             Eğitimler
+          </button>
+          <button
+            onClick={() => handleMenuClick("staff")}
+            className={clsx(
+              "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all",
+              activeMenu === "staff" ? "bg-indigo-50 text-indigo-600 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+            )}
+          >
+            <User className="w-4 h-4" />
+            Eğitmenler
           </button>
           <button
             onClick={() => handleMenuClick("calendar")}
@@ -239,6 +253,17 @@ export default function Dashboard() {
           >
             <Clock className="w-4 h-4" />
             Mesai Takibi
+          </button>
+
+          <button
+            onClick={() => handleMenuClick("leaveTracking")}
+            className={clsx(
+              "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all",
+              activeMenu === "leaveTracking" ? "bg-indigo-50 text-indigo-600 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+            )}
+          >
+            <ClipboardList className="w-4 h-4" />
+            İzin Takibi
           </button>
 
           {userProfile?.role?.toLowerCase() === 'admin' && (
@@ -284,17 +309,21 @@ export default function Dashboard() {
                 <>Merhaba, <span className="text-indigo-600">{userProfile?.name?.split(' ')[0] || 'Kullanıcı'}</span></>
               ) :
                 activeMenu === 'workshops' ? 'Eğitimler' :
-                  activeMenu === 'calendar' ? 'Takvim' :
-                    activeMenu === 'profile' ? 'Profilim' :
-                      activeMenu === 'admin' ? 'Yönetim Paneli' : ''}
+                  activeMenu === 'staff' ? 'Eğitmenler' :
+                    activeMenu === 'calendar' ? 'Takvim' :
+                      activeMenu === 'profile' ? 'Profilim' :
+                        activeMenu === 'leaveTracking' ? 'İzin Takibi' :
+                          activeMenu === 'admin' ? 'Yönetim Paneli' : ''}
             </h2>
             <p className="text-[12px] font-medium text-slate-500 mt-1 flex items-center gap-1.5">
               {activeMenu === 'attendance' ? (
                 <><CalendarIcon className="w-3.5 h-3.5" />{new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' })} — Mesai takibinizi buradan yönetin.</>
               ) :
                 activeMenu === 'workshops' ? 'Tüm eğitimleri ve etkinlikleri keşfedin' :
-                  activeMenu === 'calendar' ? 'Planlanmış tüm etkinliklerinizi yönetin' :
+                  activeMenu === 'staff' ? 'Tüm eğitmenlerimizi ve uzmanlık alanlarını görün' :
+                    activeMenu === 'calendar' ? 'Planlanmış tüm etkinliklerinizi yönetin' :
                     activeMenu === 'profile' ? 'Kişisel hesap ve sistem ayarlarınız' :
+                    activeMenu === 'leaveTracking' ? 'Gün içi izin taleplerinizi yönetin' :
                       activeMenu === 'admin' ? 'Sistem metrikleri ve personel yönetimi' : ''}
             </p>
           </div>
@@ -307,7 +336,7 @@ export default function Dashboard() {
               <NotificationDropdown />
             </div>
 
-            {activeMenu !== "attendance" && activeMenu !== "admin" && activeMenu !== "profile" && (
+            {activeMenu !== "attendance" && activeMenu !== "admin" && activeMenu !== "profile" && activeMenu !== "leaveTracking" && (
               <button
                 onClick={() => setIsModalOpen(true)}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 shadow-sm hover:shadow active:scale-95"
@@ -342,6 +371,7 @@ export default function Dashboard() {
         <div className="flex-1 overflow-y-auto bg-[#f8fafc] p-6 lg:p-8">
           <div key={activeMenu} className={clsx("mx-auto min-h-full flex flex-col animate-scale-in", (activeMenu === "calendar" || activeMenu === "admin") ? "max-w-[1400px]" : "max-w-6xl")}>
             {activeMenu === "workshops" && <WorkshopsView />}
+            {activeMenu === "staff" && <StaffDirectory />}
             {activeMenu === "calendar" && (
               <CalendarView
                 onCreateWorkshopClick={(selectedDateStr) => {
@@ -352,6 +382,7 @@ export default function Dashboard() {
             )}
             {activeMenu === "profile" && <ProfileView />}
             {activeMenu === "attendance" && <AttendanceView />}
+            {activeMenu === "leaveTracking" && <LeaveTrackingView />}
             {activeMenu === "admin" && <AdminView />}
           </div>
         </div>
