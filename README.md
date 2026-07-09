@@ -1,16 +1,59 @@
-# React + Vite
+# TeuAcademy
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+TeuAcademy, eğitim atölyeleri, kullanıcı profil yönetimi ve bildirim sistemlerini içeren modern bir akademi yönetim ve etkinlik takip uygulamasıdır. Kullanıcı dostu arayüzü ve performanslı altyapısı ile akademi süreçlerini dijitalleştirmeyi hedefler.
 
-Currently, two official plugins are available:
+## 🚀 Özellikler
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Gelişmiş Profil Yönetimi:** Kullanıcıların profillerini detaylı şekilde tamamlaması ve düzenlemesi.
+- **Atölye (Workshop) Yönetimi:** Etkinliklerin ve atölyelerin takvimlendirilmesi, detaylarının görüntülenmesi ve düzenlenmesi.
+- **Gerçek Zamanlı Bildirimler:** Kullanıcıları ilgilendiren güncellemelerin anında iletilmesi.
+- **Güvenli Kimlik Doğrulama:** Firebase altyapısı ile güvenli ve hızlı kullanıcı girişi/kaydı.
+- **Modern Arayüz:** Tailwind CSS ile hazırlanmış, tamamen responsive (mobil uyumlu) ve şık tasarım.
 
-## React Compiler
+## 🛠️ Teknoloji Yığını (Tech Stack)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Frontend:** React.js, Vite
+- **Stil & UI:** Tailwind CSS, Lucide React (İkonlar)
+- **Backend & Veritabanı:** Firebase (Auth, Firestore, Storage)
+- **Routing:** React Router v7
+- **Tarih & Zaman Yönetimi:** date-fns
+- **Veri Görselleştirme (Grafikler):** Recharts
 
-## Expanding the Oxlint configuration
+## 💻 Kurulum (Local Development)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Projeyi yerel ortamınızda çalıştırmak için aşağıdaki adımları izleyin:
+
+### Ön Gereksinimler
+- Node.js (v18 ve üzeri önerilir)
+- NPM veya Yarn
+
+### Kurulum Adımları
+
+1. Projeyi klonlayın:
+```bash
+git clone https://github.com/SENIN_KULLANICI_ADIN/TeuAcademy.git
+```
+
+2. Proje dizinine gidin:
+```bash
+cd TeuAcademy
+```
+
+3. Bağımlılıkları yükleyin:
+```bash
+npm install
+```
+
+4. Ortam değişkenlerini ayarlayın:
+Ana dizinde bir `.env` dosyası oluşturun ve gerekli Firebase yapılandırmalarını ekleyin. *(Not: Gerekli değişkenlerin listesini DEVIR_TESLIM.md dosyasında bulabilirsiniz.)*
+
+5. Geliştirme sunucusunu başlatın:
+```bash
+npm run dev
+```
+
+Uygulama varsayılan olarak `http://localhost:5173` adresinde ayağa kalkacaktır.
+
+## 📚 Dokümantasyon ve Devir Teslim
+
+Eğer projeyi yeni devraldıysanız; projenin farklı bir GitHub hesabına taşınması, kendi Firebase ve Vercel altyapınızın bağlanması hakkında detaylı yönergeler için lütfen [DEVIR_TESLIM.md](./DEVIR_TESLIM.md) dosyasını dikkatlice inceleyin.
