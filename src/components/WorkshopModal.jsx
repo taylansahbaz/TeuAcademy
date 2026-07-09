@@ -280,7 +280,7 @@ export default function WorkshopModal({ isOpen, onClose, workshop }) {
                       </div>
                       <div className="min-w-0">
                         <p className="font-bold text-sm text-slate-900 truncate">{profile.name}</p>
-                        <p className="text-xs text-slate-500 truncate">{profile.role || "Öğrenci"}</p>
+                        <p className="text-xs text-slate-500 truncate">{profile.title || "Öğrenci"}</p>
                       </div>
                     </div>
                   ))}

@@ -16,7 +16,7 @@ export default function ProfileView() {
   // Directly Editable Form State
   const [formData, setFormData] = useState({
     name: userProfile?.name || "",
-    role: userProfile?.role || ""
+    title: userProfile?.title || ""
   });
   
   const [hasChanges, setHasChanges] = useState(false);
@@ -36,11 +36,11 @@ export default function ProfileView() {
 
   useEffect(() => {
     const isNameChanged = formData.name !== (userProfile?.name || "");
-    const isRoleChanged = formData.role !== (userProfile?.role || "");
+    const isTitleChanged = formData.title !== (userProfile?.title || "");
     const isJobTagsChanged = JSON.stringify(selectedJobTags) !== JSON.stringify(userProfile?.jobTags || []);
     const isHobbyTagsChanged = JSON.stringify(selectedHobbyTags) !== JSON.stringify(userProfile?.hobbyTags || []);
     
-    setHasChanges(isNameChanged || isRoleChanged || isJobTagsChanged || isHobbyTagsChanged);
+    setHasChanges(isNameChanged || isTitleChanged || isJobTagsChanged || isHobbyTagsChanged);
   }, [formData, selectedJobTags, selectedHobbyTags, userProfile]);
 
   const handleChange = (e) => {
@@ -53,7 +53,7 @@ export default function ProfileView() {
     try {
       const updatedData = {
         name: formData.name,
-        role: formData.role,
+        title: formData.title,
         jobTags: selectedJobTags,
         hobbyTags: selectedHobbyTags,
         hobbyTag: selectedHobbyTags.join(", ")
@@ -175,7 +175,7 @@ export default function ProfileView() {
               {userProfile?.name || "İsimsiz Kullanıcı"}
             </h1>
             <p className="text-slate-500 font-medium text-sm mt-0.5">
-              {userProfile?.role || "Unvan belirtilmedi"}
+              {userProfile?.title || "Unvan belirtilmedi"}
             </p>
           </div>
         </div>
@@ -208,14 +208,14 @@ export default function ProfileView() {
               <div className="relative">
                 <input 
                   type="text" 
-                  name="role"
+                  name="title"
                   className="peer w-full border-b-2 border-slate-200 bg-transparent px-0 py-1.5 text-slate-900 font-bold text-base placeholder-transparent focus:border-indigo-600 focus:outline-none transition-colors" 
-                  value={formData.role} 
+                  value={formData.title} 
                   onChange={handleChange}
-                  placeholder="Unvan / Rol"
+                  placeholder="Unvan"
                 />
                 <label className="absolute left-0 -top-3.5 text-[11px] font-bold text-indigo-600 uppercase tracking-wider transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-slate-400 peer-placeholder-shown:top-1.5 peer-placeholder-shown:font-medium peer-placeholder-shown:normal-case peer-focus:-top-3.5 peer-focus:text-[11px] peer-focus:font-bold peer-focus:text-indigo-600 peer-focus:uppercase peer-focus:tracking-wider cursor-text">
-                  Unvan / Rol
+                  Unvan
                 </label>
               </div>
 

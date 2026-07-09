@@ -14,7 +14,7 @@ export default function CompleteProfile() {
   const navigate = useNavigate();
 
   const [name, setName] = useState(userProfile?.name || "");
-  const [role, setRole] = useState(userProfile?.role || "");
+  const [title, setTitle] = useState(userProfile?.title || "");
 
   // Custom Tag Inputs
   const [jobTagInput, setJobTagInput] = useState("");
@@ -77,7 +77,7 @@ export default function CompleteProfile() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!name || !role) {
+    if (!name || !title) {
       showAlert("Uyarı", "Lütfen temel bilgilerinizi doldurun.", "error");
       return;
     }
@@ -87,7 +87,8 @@ export default function CompleteProfile() {
       const profileData = {
         name,
         email: currentUser.email,
-        role,
+        title,
+        role: userProfile?.role || "user",
         photoURL: photoURL,
         jobTags: selectedJobTags,
         hobbyTags: selectedHobbyTags,
@@ -100,7 +101,7 @@ export default function CompleteProfile() {
       await sendNotification({
         userId: "global",
         title: "Ekibe Yeni Biri Katıldı",
-        message: `${name}, ${role} olarak ekibe katıldı. Kendisine hoş geldin deyin!`,
+        message: `${name}, ${title} olarak ekibe katıldı. Kendisine hoş geldin deyin!`,
         type: "new_staff",
         referenceId: currentUser.uid
       });
@@ -185,12 +186,12 @@ export default function CompleteProfile() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Unvan / Rol</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Unvan</label>
                   <input
                     type="text" required
                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
                     placeholder="Örn: Yazılım Geliştirici"
-                    value={role} onChange={(e) => setRole(e.target.value)}
+                    value={title} onChange={(e) => setTitle(e.target.value)}
                   />
                 </div>
               </div>

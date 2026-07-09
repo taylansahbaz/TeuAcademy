@@ -47,7 +47,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (currentUser && profileLoaded) {
-      if (!userProfile || !userProfile.name || !userProfile.role) {
+      if (!userProfile || !userProfile.name || !userProfile.title) {
         navigate('/complete-profile');
       }
     }
@@ -307,7 +307,7 @@ export default function Dashboard() {
               </div>
               <div className="hidden lg:block text-sm">
                 <p className="font-bold text-slate-900 leading-tight">{userProfile?.name}</p>
-                <p className="text-slate-500 text-xs font-medium">{userProfile?.role}</p>
+                <p className="text-slate-500 text-xs font-medium">{userProfile?.title}</p>
               </div>
             </div>
           </div>

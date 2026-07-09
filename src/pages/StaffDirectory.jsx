@@ -49,7 +49,7 @@ export default function StaffDirectory() {
 
   const filteredStaff = staff.filter(person => 
     person.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    person.role?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    person.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     person.jobTags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
     person.hobbyTag?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -72,7 +72,7 @@ export default function StaffDirectory() {
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input 
             type="text" 
-            placeholder="İsim, rol veya yetenek ara..." 
+            placeholder="İsim, unvan veya yetenek ara..." 
             className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -114,7 +114,7 @@ export default function StaffDirectory() {
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-textMain line-clamp-1">{person.name}</h3>
-                  <p className="text-textMuted text-sm line-clamp-1 font-medium">{person.role}</p>
+                  <p className="text-textMuted text-sm line-clamp-1 font-medium">{person.title}</p>
                 </div>
               </div>
 

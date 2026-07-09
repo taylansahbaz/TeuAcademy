@@ -55,7 +55,7 @@ export default function StaffDetailModal({ isOpen, onClose, person }) {
               )}
             </div>
             <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">{person.name}</h2>
-            <p className="text-slate-500 font-medium mt-1">{person.role}</p>
+            <p className="text-slate-500 font-medium mt-1">{person.title}</p>
             {person.email && (
               <div className="flex items-center gap-1.5 mt-3 text-sm text-slate-400 bg-slate-50 px-3 py-1.5 rounded-full">
                 <Mail className="w-3.5 h-3.5" />
