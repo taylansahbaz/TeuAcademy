@@ -5,10 +5,7 @@ import clsx from "clsx";
 import WorkshopsView from "./WorkshopsView";
 import CalendarView from "./CalendarView";
 import ProfileView from "./ProfileView";
-import AttendanceView from "./AttendanceView";
-import AdminView from "./AdminView";
 import StaffDirectory from "./StaffDirectory";
-import LeaveTrackingView from "./LeaveTrackingView";
 import DatePicker from "../components/DatePicker";
 import TimePicker from "../components/TimePicker";
 import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
@@ -29,18 +26,12 @@ export default function Dashboard() {
   if (path === "/takvim") activeMenu = "calendar";
   else if (path === "/egitmenler") activeMenu = "staff";
   else if (path === "/profil") activeMenu = "profile";
-  else if (path === "/mesaitakip") activeMenu = "attendance";
-  else if (path === "/izintakip") activeMenu = "leaveTracking";
-  else if (path === "/admin") activeMenu = "admin";
 
   const handleMenuClick = (menu) => {
     if (menu === "workshops") navigate("/");
     else if (menu === "staff") navigate("/egitmenler");
     else if (menu === "calendar") navigate("/takvim");
     else if (menu === "profile") navigate("/profil");
-    else if (menu === "attendance") navigate("/mesaitakip");
-    else if (menu === "leaveTracking") navigate("/izintakip");
-    else if (menu === "admin") navigate("/admin");
   };
 
   // Modal State
@@ -195,7 +186,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#f8fafc] flex font-sans text-slate-900">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col hidden md:flex shrink-0 shadow-sm z-10">
+      <aside className="w-64 bg-white border-r border-slate-200 flex-col hidden md:flex shrink-0 shadow-sm z-10">
         <div className="h-16 flex items-center px-6 border-b border-slate-100">
           <h1 className="text-xl font-extrabold text-indigo-600 tracking-tight">TeuAcademy</h1>
         </div>
@@ -243,41 +234,6 @@ export default function Dashboard() {
           </button>
 
           <div className="my-2 border-t border-slate-100"></div>
-
-          <button
-            onClick={() => handleMenuClick("attendance")}
-            className={clsx(
-              "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all",
-              activeMenu === "attendance" ? "bg-indigo-50 text-indigo-600 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-            )}
-          >
-            <Clock className="w-4 h-4" />
-            Mesai Takibi
-          </button>
-
-          <button
-            onClick={() => handleMenuClick("leaveTracking")}
-            className={clsx(
-              "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all",
-              activeMenu === "leaveTracking" ? "bg-indigo-50 text-indigo-600 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-            )}
-          >
-            <ClipboardList className="w-4 h-4" />
-            İzin Takibi
-          </button>
-
-          {userProfile?.role?.toLowerCase() === 'admin' && (
-            <button
-              onClick={() => handleMenuClick("admin")}
-              className={clsx(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all",
-                activeMenu === "admin" ? "bg-indigo-50 text-indigo-600 shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-              )}
-            >
-              <Shield className="w-4 h-4" />
-              Yönetim Paneli
-            </button>
-          )}
         </nav>
 
         <div className="p-4 space-y-1 mb-2 border-t border-slate-100">
@@ -305,26 +261,16 @@ export default function Dashboard() {
 
           <div className="hidden md:flex flex-col flex-1">
             <h2 className="text-xl font-extrabold text-slate-900 leading-tight">
-              {activeMenu === 'attendance' ? (
-                <>Merhaba, <span className="text-indigo-600">{userProfile?.name?.split(' ')[0] || 'Kullanıcı'}</span></>
-              ) :
-                activeMenu === 'workshops' ? 'Eğitimler' :
+              {activeMenu === 'workshops' ? 'Eğitimler' :
                   activeMenu === 'staff' ? 'Eğitmenler' :
                     activeMenu === 'calendar' ? 'Takvim' :
-                      activeMenu === 'profile' ? 'Profilim' :
-                        activeMenu === 'leaveTracking' ? 'İzin Takibi' :
-                          activeMenu === 'admin' ? 'Yönetim Paneli' : ''}
+                      activeMenu === 'profile' ? 'Profilim' : ''}
             </h2>
             <p className="text-[12px] font-medium text-slate-500 mt-1 flex items-center gap-1.5">
-              {activeMenu === 'attendance' ? (
-                <><CalendarIcon className="w-3.5 h-3.5" />{new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' })} — Mesai takibinizi buradan yönetin.</>
-              ) :
-                activeMenu === 'workshops' ? 'Tüm eğitimleri ve etkinlikleri keşfedin' :
+              {activeMenu === 'workshops' ? 'Tüm eğitimleri ve etkinlikleri keşfedin' :
                   activeMenu === 'staff' ? 'Tüm eğitmenlerimizi ve uzmanlık alanlarını görün' :
                     activeMenu === 'calendar' ? 'Planlanmış tüm etkinliklerinizi yönetin' :
-                    activeMenu === 'profile' ? 'Kişisel hesap ve sistem ayarlarınız' :
-                    activeMenu === 'leaveTracking' ? 'Gün içi izin taleplerinizi yönetin' :
-                      activeMenu === 'admin' ? 'Sistem metrikleri ve personel yönetimi' : ''}
+                    activeMenu === 'profile' ? 'Kişisel hesap ve sistem ayarlarınız' : ''}
             </p>
           </div>
 
@@ -336,7 +282,7 @@ export default function Dashboard() {
               <NotificationDropdown />
             </div>
 
-            {activeMenu !== "attendance" && activeMenu !== "admin" && activeMenu !== "profile" && activeMenu !== "leaveTracking" && (
+            {activeMenu !== "profile" && (
               <button
                 onClick={() => setIsModalOpen(true)}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 shadow-sm hover:shadow active:scale-95"
@@ -381,9 +327,6 @@ export default function Dashboard() {
               />
             )}
             {activeMenu === "profile" && <ProfileView />}
-            {activeMenu === "attendance" && <AttendanceView />}
-            {activeMenu === "leaveTracking" && <LeaveTrackingView />}
-            {activeMenu === "admin" && <AdminView />}
           </div>
         </div>
 
